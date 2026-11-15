@@ -843,7 +843,7 @@
 
         function getExerciseThumbnailHtml(exName, extraClass = "w-12 h-12") {
             const info = EXERCISE_IMAGE_MAP[exName];
-            const fileName = info ? info.file : null;
+            const fileName = info ? info.file.normalize('NFD') : null;
             if (fileName) {
                 return `<img src="${fileName}" alt="${exName}" class="${extraClass} rounded-xl object-cover border border-[#E5E5EA] bg-white shrink-0" onerror="this.replaceWith(createFallbackElement('${exName}', '${extraClass}'));">`;
             }
