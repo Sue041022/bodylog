@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>BodyLog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-grouped: #F2F2F7;
+            --bg-surface: #FFFFFF;
+            --ink-primary: #111827;
+            --ink-secondary: #6E6E73;
+            --ink-tertiary: #8E8E93;
+            --accent: #007AFF;
+            --accent-soft: #EBF5FF;
+            --separator: #E5E5EA;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-grouped);
+            color: var(--ink-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ios-card {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="range"].interval-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #E5E5EA;
+            border-radius: 999px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"].interval-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            border: 0.5px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+            cursor: grab;
+        }
+
+        .modal-backdrop {
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-panel {
+            transition: transform 0.26s cubic-bezier(0.2, 0.85, 0.3, 1), opacity 0.2s ease;
+        }
+
+        .modal-hidden {
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .modal-hidden .modal-panel {
+            transform: translateY(14px);
+            opacity: 0;
+        }
+
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col md:flex-row">
+
+    <!-- PC サイドバー -->
+    <aside class="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-0 bg-white border-r border-[#E5E5EA] z-30">
+        <div class="px-5 pt-6 pb-4 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div
+                    class="w-7 h-7 rounded-lg bg-[#111827] flex items-center justify-center text-white font-bold text-sm">
+                    B
+                </div>
+                <span class="font-bold text-base tracking-tight text-[#111827]">BodyLog</span>
+            </div>
+            <span class="text-[11px] font-medium text-[#8E8E93]">自動保存</span>
+        </div>
+
+        <nav class="flex-1 px-3 space-y-1">
+            <button onclick="switchMainView('home')" id="nav-pc-home"
+                class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold bg-[#F2F2F7] text-[#111827] transition-colors cursor-pointer">
+                <svg class="w-4 h-4 text-[#007AFF]" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+                ホーム
+            </button>
+            <button onclick="switchMainView('data')" id="nav-pc-data"
+                class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F2F2F7]/60 transition-colors cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M18 20V10M12 20V4M6 20v-6" />
+                </svg>
+                推移データ
+            </button>
+            <button onclick="switchMainView('sync')" id="nav-pc-sync"
+                class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F2F2F7]/60 transition-colors cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+                端末間データ同期
+            </button>
+            <button onclick="openScheduleModal()"
+                class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F2F2F7]/60 transition-colors cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                週間メニュー設定
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-[#E5E5EA]">
+            <button onclick="resetToDefaultData()"
+                class="w-full text-left px-2 py-1 text-xs text-[#8E8E93] hover:text-[#111827] transition-colors cursor-pointer">
+                初期メニューに戻す
+            </button>
+        </div>
+    </aside>
+
+    <!-- メインコンテンツ領域 -->
+    <div class="flex-1 md:pl-60 flex flex-col min-h-screen">
+
+        <!-- モバイル用ヘッダー -->
+        <header
+            class="md:hidden sticky top-0 z-20 bg-[#F2F2F7]/90 backdrop-blur-md border-b border-black/5 px-4 h-12 flex items-center justify-between">
+            <span class="font-bold text-base tracking-tight text-[#111827]">BodyLog</span>
+            <div class="flex items-center gap-3">
+                <span id="save-status-badge" class="text-[11px] font-medium text-[#8E8E93]">保存済み</span>
+                <button onclick="openScheduleModal()" class="text-xs font-semibold text-[#007AFF] cursor-pointer">
+                    メニュー設定
+                </button>
+            </div>
+        </header>
+
+        <!-- VIEW 1: ホーム画面 -->
+        <main id="view-home" class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 md:px-8 pt-3 md:pt-7 pb-28 md:pb-12">
+
+            <!-- ① カレンダーセクション -->
+            <section class="mb-4 md:mb-6">
+                <div class="flex items-center justify-between mb-2.5 px-0.5">
+                    <div class="flex items-center gap-2">
+                        <button onclick="shiftCalendar(-1)"
+                            class="w-7 h-7 rounded-lg bg-white border border-[#E5E5EA] flex items-center justify-center text-[#6E6E73] hover:text-[#111827] cursor-pointer">‹</button>
+                        <h1 id="calendar-month-title"
+                            class="text-base md:text-xl font-bold text-[#111827] tracking-tight tabular-nums">
+                            2026年 11月
+                        </h1>
+                        <button onclick="shiftCalendar(1)"
+                            class="w-7 h-7 rounded-lg bg-white border border-[#E5E5EA] flex items-center justify-center text-[#6E6E73] hover:text-[#111827] cursor-pointer">›</button>
+                        <button onclick="jumpToToday()"
+                            class="ml-1 px-2.5 py-1 rounded-lg bg-white border border-[#E5E5EA] text-[11px] font-semibold text-[#007AFF] hover:bg-[#EBF5FF] cursor-pointer">
+                            今日
+                        </button>
+                    </div>
+
+                    <!-- セグメントコントロール（週間 / 月間） -->
+                    <div class="inline-flex bg-[#E5E5EA]/80 p-0.5 rounded-lg">
+                        <button onclick="setCalendarMode('week')" id="btn-mode-week"
+                            class="px-3 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs transition-all cursor-pointer">
+                            週間
+                        </button>
+                        <button onclick="setCalendarMode('month')" id="btn-mode-month"
+                            class="px-3 py-1 rounded-md text-xs font-medium text-[#6E6E73] hover:text-[#111827] transition-all cursor-pointer">
+                            月間
+                        </button>
+                    </div>
+                </div>
+
+                <div id="calendar-container" class="ios-card p-2.5 sm:p-3.5">
+                </div>
+            </section>
+
+            <!-- レスポンシブグリッド -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start">
+
+                <!-- ② 成長推移グラフ＆体重記録 -->
+                <div class="order-1 lg:order-2 lg:col-span-5 space-y-4 lg:sticky lg:top-6">
+                    <div class="ios-card p-4 sm:p-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="inline-flex bg-[#F2F2F7] p-0.5 rounded-lg">
+                                <button onclick="setHomeChartType('volume')" id="home-chart-tab-volume"
+                                    class="px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer">
+                                    運動量・時間
+                                </button>
+                                <button onclick="setHomeChartType('weight')" id="home-chart-tab-weight"
+                                    class="px-2.5 py-1 rounded-md text-xs font-medium text-[#6E6E73] hover:text-[#111827] cursor-pointer">
+                                    体重推移
+                                </button>
+                            </div>
+                            <button onclick="switchMainView('data')"
+                                class="text-xs font-semibold text-[#007AFF] cursor-pointer">
+                                詳細分析 ›
+                            </button>
+                        </div>
+                        <div class="h-40 sm:h-48 w-full">
+                            <canvas id="homeGrowthChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="ios-card p-4 sm:p-5">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <div>
+                                <h3 id="weight-card-date-label" class="text-xs font-semibold text-[#6E6E73]">体重記録</h3>
+                                <p id="weight-diff-label" class="text-[11px] text-[#8E8E93] mt-0.5">前回比: --</p>
+                            </div>
+                            <span id="weight-saved-indicator"
+                                class="text-[11px] font-semibold text-[#007AFF] opacity-0 transition-opacity">保存しました</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <input type="number" step="0.1" id="daily-weight-input" placeholder="65.0"
+                                    class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#F2F2F7] text-base font-bold text-[#111827] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:bg-white transition-all" />
+                                <span
+                                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">kg</span>
+                            </div>
+                            <button onclick="saveDailyWeight()"
+                                class="px-4 py-2.5 rounded-xl bg-[#111827] hover:bg-black text-white text-xs font-semibold transition-colors cursor-pointer shrink-0">
+                                記録
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ③ 今日のワークアウト開始カード ＆ 画像付き種目リスト -->
+                <div class="order-2 lg:order-1 lg:col-span-7 space-y-4">
+                    <div class="ios-card p-4 sm:p-5">
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <h2 id="workout-card-heading" class="text-base sm:text-lg font-bold text-[#111827]">
+                                        上半身B
+                                    </h2>
+                                    <span id="schedule-type-badge"
+                                        class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF5FF] text-[#007AFF]">
+                                        筋トレ
+                                    </span>
+                                </div>
+                                <p id="schedule-subtitle" class="text-xs text-[#6E6E73]">胸・背中・肩を重点的に</p>
+                            </div>
+                            <button onclick="openScheduleModal()"
+                                class="shrink-0 text-xs font-semibold text-[#007AFF] hover:opacity-80 px-2.5 py-1.5 rounded-lg bg-[#F2F2F7] transition-opacity cursor-pointer">
+                                予定変更
+                            </button>
+                        </div>
+
+                        <div
+                            class="grid grid-cols-3 divide-x divide-[#E5E5EA] py-3 rounded-xl bg-[#F2F2F7]/70 mb-4 text-center">
+                            <div>
+                                <span class="text-[11px] text-[#8E8E93] block">総ボリューム</span>
+                                <span id="total-volume-display"
+                                    class="font-bold text-[#111827] text-sm sm:text-base tabular-nums">0kg</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] text-[#8E8E93] block">運動時間</span>
+                                <span id="total-duration-display"
+                                    class="font-bold text-[#111827] text-sm sm:text-base tabular-nums">0分</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] text-[#8E8E93] block">種目数</span>
+                                <span id="exercise-count-display"
+                                    class="font-bold text-[#111827] text-sm sm:text-base tabular-nums">6種目</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="openPreWorkoutScreen()"
+                                class="flex-1 py-3 px-4 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] active:scale-[0.99] text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                                <span>ワークを開始</span>
+                            </button>
+                            <button onclick="openAddExerciseModal()"
+                                class="py-3 px-4 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#111827] font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
+                                ＋ 種目追加
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 画像付き種目リスト -->
+                    <div class="space-y-3" id="exercise-list-container"></div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- ==========================================
+         VIEW 2: 推移データタブ
+    =========================================== -->
+        <main id="view-data"
+            class="hidden flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 md:px-8 pt-4 md:pt-7 pb-28 md:pb-12">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h1 class="text-lg md:text-2xl font-bold text-[#111827]">推移データ</h1>
+                    <p class="text-xs text-[#6E6E73] mt-0.5">種目別・部位別の重量と運動時間、体重の変化を確認できます</p>
+                </div>
+                <button onclick="switchMainView('home')"
+                    class="px-3 py-1.5 rounded-lg bg-white border border-[#E5E5EA] text-xs font-semibold text-[#111827] cursor-pointer">
+                    ホームへ
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                <div class="ios-card p-4">
+                    <span class="text-xs text-[#8E8E93] block mb-1">累計ボリューム</span>
+                    <span id="stat-total-vol"
+                        class="text-lg sm:text-xl font-bold text-[#111827] tabular-nums">0kg</span>
+                </div>
+                <div class="ios-card p-4">
+                    <span class="text-xs text-[#8E8E93] block mb-1">累計運動時間</span>
+                    <span id="stat-total-time"
+                        class="text-lg sm:text-xl font-bold text-[#007AFF] tabular-nums">0分</span>
+                </div>
+                <div class="ios-card p-4">
+                    <span class="text-xs text-[#8E8E93] block mb-1">実施ワーク数</span>
+                    <span id="stat-workout-days"
+                        class="text-lg sm:text-xl font-bold text-[#111827] tabular-nums">0回</span>
+                </div>
+                <div class="ios-card p-4">
+                    <span class="text-xs text-[#8E8E93] block mb-1">最新体重</span>
+                    <span id="stat-latest-weight" class="text-lg sm:text-xl font-bold text-[#111827] tabular-nums">--
+                        kg</span>
+                </div>
+            </div>
+
+            <div class="ios-card p-4 sm:p-6 mb-5">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div class="inline-flex bg-[#F2F2F7] p-0.5 rounded-lg">
+                        <button onclick="setAnalyticsMode('exercise')" id="tab-ana-exercise"
+                            class="px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer">
+                            種目別
+                        </button>
+                        <button onclick="setAnalyticsMode('muscle')" id="tab-ana-muscle"
+                            class="px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer">
+                            部位別
+                        </button>
+                        <button onclick="setAnalyticsMode('bodyweight')" id="tab-ana-bodyweight"
+                            class="px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer">
+                            体重変化
+                        </button>
+                    </div>
+
+                    <select id="analytics-target-select" onchange="renderAnalyticsChart()"
+                        class="px-3.5 py-1.5 rounded-lg bg-[#F2F2F7] text-xs sm:text-sm font-semibold text-[#111827] focus:outline-none">
+                    </select>
+                </div>
+
+                <div class="h-60 sm:h-72 w-full">
+                    <canvas id="detailAnalyticsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="ios-card p-4 sm:p-6">
+                <h3 class="text-sm font-bold text-[#111827] mb-3">部位別実績</h3>
+                <div id="muscle-breakdown-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                </div>
+            </div>
+        </main>
+
+        <!-- ==========================================
+         VIEW 3: 端末間データ同期タブ
+    =========================================== -->
+        <main id="view-sync"
+            class="hidden flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 md:px-8 pt-4 md:pt-7 pb-28 md:pb-12">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h1 class="text-lg md:text-2xl font-bold text-[#111827]">PC・スマホ データ同期</h1>
+                    <p class="text-xs text-[#6E6E73] mt-0.5">短い同期コードやファイルで端末間を引き継げます</p>
+                </div>
+                <button onclick="switchMainView('home')"
+                    class="px-3 py-1.5 rounded-lg bg-white border border-[#E5E5EA] text-xs font-semibold text-[#111827] cursor-pointer">
+                    ホームへ
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="ios-card p-5">
+                    <h2 class="text-sm font-bold text-[#111827] mb-1">方法1：同期コードで引き継ぐ</h2>
+                    <p class="text-xs text-[#6E6E73] leading-relaxed mb-4">
+                        「同期コードをコピー」を押し、LINE等でもう一方の端末へ送って貼り付けてください。
+                    </p>
+
+                    <div class="space-y-3">
+                        <button onclick="copySyncCode()"
+                            class="w-full py-3 px-4 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
+                            現在のデータを同期コードとしてコピー
+                        </button>
+                        <p id="sync-code-copied-msg" class="text-xs font-semibold text-[#007AFF] hidden">
+                            ✓ 同期コードをコピーしました。
+                        </p>
+
+                        <div class="pt-3 border-t border-[#E5E5EA]">
+                            <label class="block text-xs font-semibold text-[#6E6E73] mb-1.5">同期コードを貼り付けて復元</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="sync-code-input" placeholder="コードを貼り付け..."
+                                    class="flex-1 px-3 py-2.5 rounded-xl bg-[#F2F2F7] text-xs text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:bg-white" />
+                                <button onclick="importSyncCode()"
+                                    class="px-4 py-2.5 rounded-xl bg-[#111827] text-white text-xs font-semibold shrink-0 cursor-pointer">
+                                    読み込む
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ios-card p-5">
+                    <h2 class="text-sm font-bold text-[#111827] mb-1">方法2：ファイル共有</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                        <button onclick="exportBackupFile()"
+                            class="py-2.5 px-4 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#111827] font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
+                            ファイルを書き出す
+                        </button>
+                        <label
+                            class="py-2.5 px-4 rounded-xl border border-[#E5E5EA] hover:border-[#007AFF] text-[#111827] font-semibold text-xs sm:text-sm text-center transition-colors cursor-pointer">
+                            ファイルから読み込む
+                            <input type="file" accept=".json" onchange="importBackupFile(event)" class="hidden" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- モバイル用タブバー -->
+        <nav
+            class="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#E5E5EA] z-30 pb-safe">
+            <div class="grid grid-cols-4 h-14 py-1">
+                <button onclick="switchMainView('home')" id="nav-mob-home"
+                    class="flex flex-col items-center justify-center text-[#007AFF]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <path d="M16 2v4M8 2v4M3 10h18" />
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-0.5">ホーム</span>
+                </button>
+                <button onclick="openPreWorkoutScreen()"
+                    class="flex flex-col items-center justify-center text-[#8E8E93] hover:text-[#007AFF]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-0.5">ワーク</span>
+                </button>
+                <button onclick="switchMainView('data')" id="nav-mob-data"
+                    class="flex flex-col items-center justify-center text-[#8E8E93] hover:text-[#007AFF]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M18 20V10M12 20V4M6 20v-6" />
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-0.5">推移</span>
+                </button>
+                <button onclick="switchMainView('sync')" id="nav-mob-sync"
+                    class="flex flex-col items-center justify-center text-[#8E8E93] hover:text-[#007AFF]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                        <polyline points="16 6 12 2 8 6" />
+                        <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-0.5">同期</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ==========================================================================
+       フルスクリーン：ワークアウト実行画面（画像1.7倍・背景色同化・枠線なし）
+  =========================================== -->
+    <div id="workout-session-overlay" class="hidden fixed inset-0 z-50 bg-[#F2F2F7] flex flex-col overflow-y-auto">
+
+        <!-- STEP 1: ワーク開始前確認 -->
+        <div id="wo-step-preview" class="flex-1 max-w-xl w-full mx-auto px-4 sm:px-6 py-5 flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="closeWorkoutOverlay()"
+                    class="w-9 h-9 rounded-full bg-white border border-[#E5E5EA] flex items-center justify-center text-[#6E6E73] hover:text-[#111827] cursor-pointer">
+                    ✕
+                </button>
+                <div class="text-center">
+                    <span class="text-[11px] font-semibold text-[#8E8E93] block">本日のワーク内容</span>
+                    <h2 id="wo-preview-title" class="text-base font-bold text-[#111827]">上半身B</h2>
+                </div>
+                <button onclick="openScheduleModal(true)"
+                    class="px-3 py-1.5 rounded-lg bg-white border border-[#E5E5EA] text-xs font-semibold text-[#007AFF] cursor-pointer">
+                    編集
+                </button>
+            </div>
+
+            <p class="text-xs text-[#6E6E73] mb-3 px-1">
+                ここで重量やセット数、休憩時間（インターバル）を確認・変更できます。
+            </p>
+
+            <div id="wo-preview-list" class="flex-1 space-y-3 mb-5">
+            </div>
+
+            <div class="sticky bottom-4 pt-2">
+                <button onclick="beginWorkoutFlow()"
+                    class="w-full py-3.5 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-sm transition-all cursor-pointer">
+                    トレーニングを開始する
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 2: 種目間待機画面（画像を1.7倍＆背景色同化・枠線なし） -->
+        <div id="wo-step-ready"
+            class="hidden flex-1 max-w-md w-full mx-auto px-6 py-8 flex flex-col justify-between text-center bg-[#F2F2F7]">
+            <div class="flex items-center justify-between">
+                <span id="wo-ready-progress"
+                    class="text-xs font-semibold px-3 py-1 rounded-lg bg-white border border-[#E5E5EA] text-[#6E6E73] tabular-nums">
+                    種目 1 / 6
+                </span>
+                <button onclick="abortWorkoutSession()"
+                    class="text-xs font-semibold text-[#8E8E93] hover:text-rose-600 px-3 py-1.5 cursor-pointer">
+                    終了
+                </button>
+            </div>
+
+            <div class="my-auto py-2">
+                <!-- 画像を1.7倍大きくし、背景色と完全同化（mix-blend-multiplyで白い浮きを完全に解消） -->
+                <div id="wo-ready-img-container" class="flex justify-center mb-4"></div>
+                <span id="wo-ready-muscle"
+                    class="inline-block text-xs font-semibold px-3 py-1 rounded-lg bg-white border border-[#E5E5EA] text-[#6E6E73] mb-3">
+                    胸
+                </span>
+                <h2 id="wo-ready-ex-name"
+                    class="text-3xl sm:text-4xl font-extrabold text-[#111827] tracking-tight mb-2">
+                    チェストプレス
+                </h2>
+                <p id="wo-ready-meta" class="text-sm font-medium text-[#6E6E73] tabular-nums">
+                    全3セット ・ 設定休憩 90秒
+                </p>
+            </div>
+
+            <div class="pb-4">
+                <button onclick="startCurrentExercise()" id="wo-start-exercise-btn"
+                    class="w-full py-4 px-6 rounded-2xl bg-[#007AFF] hover:bg-[#0066D6] active:scale-[0.99] text-white font-bold text-base sm:text-lg transition-all shadow-lg cursor-pointer">
+                    チェストプレスをスタート
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 3: セット実行中 -->
+        <div id="wo-step-active" class="hidden flex-1 bg-[#111827] text-white flex flex-col justify-between px-6 py-8">
+            <div class="text-center pt-2">
+                <p id="wo-active-set-badge"
+                    class="text-sm font-semibold text-[#60A5FA] tracking-wider mb-1 tabular-nums">
+                    SET 1 / 3
+                </p>
+                <h2 id="wo-active-ex-name" class="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    チェストプレス
+                </h2>
+                <p id="wo-active-target" class="text-base font-medium text-neutral-400 mt-1.5 tabular-nums">
+                    40kg × 10〜12回
+                </p>
+            </div>
+
+            <div class="my-auto text-center">
+                <div id="wo-active-timer" class="text-7xl sm:text-8xl font-bold tracking-tight text-white tabular-nums">
+                    00:00
+                </div>
+            </div>
+
+            <div class="max-w-md w-full mx-auto space-y-3 pb-4">
+                <button onclick="completeCurrentSet()"
+                    class="w-full py-4 rounded-2xl bg-[#007AFF] hover:bg-[#0066D6] active:scale-[0.99] text-white font-bold text-lg sm:text-xl transition-all cursor-pointer">
+                    完了
+                </button>
+                <button onclick="abortWorkoutSession()"
+                    class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 text-neutral-300 font-semibold text-sm transition-colors cursor-pointer">
+                    中止
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 4: セット間インターバル自動カウントダウン -->
+        <div id="wo-step-rest" class="hidden flex-1 bg-white flex flex-col justify-between px-6 py-8 text-center">
+            <div class="pt-2">
+                <span class="text-xs font-bold text-[#007AFF] tracking-wider uppercase block mb-1">
+                    INTERVAL
+                </span>
+                <h3 id="wo-rest-next-info" class="text-lg sm:text-xl font-bold text-[#111827]">
+                    次は SET 2 / 3（40kg）
+                </h3>
+                <p class="text-xs text-[#8E8E93] mt-1">0秒になると自動で次のセットが始まります</p>
+            </div>
+
+            <div class="my-auto">
+                <div id="wo-rest-timer" class="text-7xl sm:text-8xl font-bold text-[#007AFF] tabular-nums mb-6">
+                    01:30
+                </div>
+                <div class="inline-flex items-center gap-2.5">
+                    <button onclick="adjustRestTimer(-10)"
+                        class="px-4 py-2.5 rounded-xl bg-[#F2F2F7] text-[#111827] font-semibold text-sm cursor-pointer tabular-nums">
+                        −10秒
+                    </button>
+                    <button onclick="adjustRestTimer(10)"
+                        class="px-4 py-2.5 rounded-xl bg-[#F2F2F7] text-[#111827] font-semibold text-sm cursor-pointer tabular-nums">
+                        ＋10秒
+                    </button>
+                </div>
+            </div>
+
+            <div class="max-w-md w-full mx-auto space-y-2.5 pb-4">
+                <button onclick="finishRestAndStartNextSet()"
+                    class="w-full py-3.5 rounded-xl bg-[#111827] text-white font-bold text-sm sm:text-base cursor-pointer">
+                    休憩をスキップして次セットへ
+                </button>
+                <button onclick="abortWorkoutSession()"
+                    class="w-full py-2 text-xs font-semibold text-[#8E8E93] hover:text-rose-600 cursor-pointer">
+                    中止する
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+       モーダル①：スケジュール・メニュー編集モーダル
+  =========================================== -->
+    <div id="schedule-modal"
+        class="modal-backdrop modal-hidden fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div
+            class="modal-panel bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 id="schedule-modal-title" class="text-base font-bold text-[#111827]">スケジュールを変更</h3>
+                    <p class="text-xs text-[#8E8E93]">メニュー内容や種目の追加・削除ができます</p>
+                </div>
+                <button onclick="closeScheduleModal()"
+                    class="w-8 h-8 rounded-full bg-[#F2F2F7] flex items-center justify-center text-[#6E6E73] cursor-pointer">✕</button>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-[#6E6E73] mb-2">登録済みルーティンを適用</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="preset-template-buttons"></div>
+            </div>
+
+            <form onsubmit="handleSaveSchedule(event)" class="space-y-4 border-t border-[#E5E5EA] pt-4">
+                <div>
+                    <label class="block text-xs font-semibold text-[#6E6E73] mb-1">タイトル</label>
+                    <input type="text" id="sched-title-input" required
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#F2F2F7] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:bg-white" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#6E6E73] mb-1">区分</label>
+                        <select id="sched-badge-input"
+                            class="w-full px-3 py-2.5 rounded-xl bg-[#F2F2F7] text-sm font-semibold focus:outline-none">
+                            <option value="筋トレ">筋トレ</option>
+                            <option value="軽めの日">軽めの日</option>
+                            <option value="休養日">完全休養</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#6E6E73] mb-1">部位・メモ</label>
+                        <input type="text" id="sched-sub-input"
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#F2F2F7] text-sm focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:bg-white" />
+                    </div>
+                </div>
+
+                <div class="border-t border-[#E5E5EA] pt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-[#6E6E73]">この日の種目</span>
+                        <button type="button" onclick="closeScheduleModal(); openAddExerciseModal();"
+                            class="text-xs font-semibold text-[#007AFF] cursor-pointer">
+                            ＋ 種目を追加
+                        </button>
+                    </div>
+                    <div id="modal-exercise-quick-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="sched-apply-weekly" class="w-4 h-4 rounded text-[#007AFF]" />
+                    <label for="sched-apply-weekly" id="sched-apply-weekly-label" class="text-xs text-[#6E6E73]">
+                        毎週この曜日の基本スケジュールとしても保存する
+                    </label>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-3 rounded-xl bg-[#007AFF] text-white font-semibold text-sm cursor-pointer">
+                    保存する
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+       モーダル②：種目追加モーダル（画像3枚目風のテキスト検索＆絞り込み付き）
+  =========================================== -->
+    <div id="add-exercise-modal"
+        class="modal-backdrop modal-hidden fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div
+            class="modal-panel bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-bold text-[#111827]">種目を追加</h3>
+                <button onclick="closeAddExerciseModal()"
+                    class="w-8 h-8 rounded-full bg-[#F2F2F7] flex items-center justify-center text-[#6E6E73] cursor-pointer">✕</button>
+            </div>
+
+            <!-- 画像3枚目スタイル：テキスト検索バー -->
+            <div class="mb-3">
+                <div class="relative">
+                    <span
+                        class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E8E93]">🔍</span>
+                    <input type="text" id="exercise-search-input" oninput="onExerciseSearchInput(this.value)"
+                        placeholder="種目名を検索 (例: プランク)"
+                        class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F2F2F7] text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:bg-white" />
+                </div>
+            </div>
+
+            <!-- 部位の絞り込みタグ -->
+            <div class="mb-3">
+                <label class="block text-xs font-semibold text-[#8E8E93] mb-1.5">筋肉の部位で絞り込み</label>
+                <div class="flex flex-wrap gap-1.5" id="muscle-filter-chips">
+                    <button onclick="filterPresetExercises('すべて')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#111827] text-white cursor-pointer muscle-chip"
+                        data-muscle="すべて">すべて</button>
+                    <button onclick="filterPresetExercises('胸')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip"
+                        data-muscle="胸">胸</button>
+                    <button onclick="filterPresetExercises('背中')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip"
+                        data-muscle="背中">背中</button>
+                    <button onclick="filterPresetExercises('肩')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip"
+                        data-muscle="肩">肩</button>
+                    <button onclick="filterPresetExercises('腕')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip"
+                        data-muscle="腕">腕</button>
+                    <button onclick="filterPresetExercises('脚')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip"
+                        data-muscle="脚">脚</button>
+                    <button onclick="filterPresetExercises('お尻')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip"
+                        data-muscle="お尻">お尻</button>
+                    <button onclick="filterPresetExercises('体幹')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip"
+                        data-muscle="体幹">体幹</button>
+                </div>
+            </div>
+
+            <!-- 画像＋種目名の選択リスト -->
+            <div class="border-t border-[#E5E5EA] pt-3 mb-4">
+                <label class="block text-xs font-semibold text-[#8E8E93] mb-2">インプット済み種目リスト（タップして選択）</label>
+                <div id="preset-exercise-cards-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                </div>
+            </div>
+
+            <!-- 選択された種目の詳細設定フォーム（体幹の場合は秒数・セット数、筋トレは重量・セット数） -->
+            <form onsubmit="handleCreateExercise(event)" class="space-y-3 border-t border-[#E5E5EA] pt-3">
+                <input type="hidden" id="new-ex-muscle" value="胸" />
+                <input type="hidden" id="new-ex-type" value="strength" />
+
+                <div class="flex items-center gap-3 bg-[#F2F2F7] p-2.5 rounded-xl">
+                    <div id="selected-preview-thumb"></div>
+                    <div class="flex-1">
+                        <span class="text-[10px] font-semibold text-[#8E8E93] block">選択中の種目</span>
+                        <input type="text" id="new-ex-name" required readonly placeholder="上のリストから選んでください"
+                            class="w-full bg-transparent text-sm font-bold text-[#111827] focus:outline-none" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5" id="dynamic-input-fields">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#6E6E73] mb-1">セット数</label>
+                        <input type="number" id="new-ex-sets" value="3" min="1" max="10"
+                            class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />
+                    </div>
+                    <div id="dynamic-second-field">
+                        <label class="block text-xs font-semibold text-[#6E6E73] mb-1">重量(kg)</label>
+                        <input type="number" id="new-ex-weight" step="0.5" value="20"
+                            class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-3 rounded-xl bg-[#007AFF] text-white font-semibold text-sm cursor-pointer shadow-sm">
+                    メニューに追加
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       JavaScript
+  =========================================== -->
+    <script>
+        const STORAGE_KEY = 'bodylog_custom_v6';
+        const CURRENT_SCHEMA_VERSION = 11;
+        const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
+
+        const EXERCISE_IMAGE_MAP = {
+            "インクラインダンベルプレス": { file: "インクラインダンベルプレス.png", muscle: "胸", type: "strength" },
+            "カーフレイズ": { file: "カーフレイズ.png", muscle: "脚", type: "strength" },
+            "サイドプランク": { file: "サイドプランク.png", muscle: "体幹", type: "cardio" },
+            "サイドレイズ": { file: "サイドレイズ.png", muscle: "肩", type: "strength" },
+            "シーテッドロー": { file: "シーテッドロー.png", muscle: "背中", type: "strength" },
+            "ストレッチ": { file: "ストレッチ.png", muscle: "体幹", type: "cardio" },
+            "ダンベルカール": { file: "ダンベルカール.png", muscle: "腕", type: "strength" },
+            "チェストプレス": { file: "チェストプレス.png", muscle: "胸", type: "strength" },
+            "デッドバグ": { file: "デッドバグ.png", muscle: "体幹", type: "strength" },
+            "トライセプスプレスダウン": { file: "トライセプスプレスダウン.png", muscle: "腕", type: "strength" },
+            "ヒップスラスト": { file: "ヒップスラスト.png", muscle: "お尻", type: "strength" },
+            "プランク": { file: "プランク.png", muscle: "体幹", type: "cardio" },
+            "ブルガリアンスクワット": { file: "ブルガリアンスクワット.png", muscle: "脚", type: "strength" },
+            "ペックフライ": { file: "ペックフライ.png", muscle: "胸", type: "strength" },
+            "ラットプルダウン": { file: "ラットプルダウン.png", muscle: "背中", type: "strength" },
+            "リアデルトフライ": { file: "リアデルトフライ.png", muscle: "肩", type: "strength" },
+            "ルーマニアンデッドリフト": { file: "ルーマニアンデッドリフト.png", muscle: "お尻", type: "strength" },
+            "レッグエクステンション": { file: "レッグエクステンション.png", muscle: "脚", type: "strength" },
+            "レッグカール": { file: "レッグカール.png", muscle: "脚", type: "strength" },
+            "レッグプレス": { file: "レッグプレス.png", muscle: "脚", type: "strength" },
+            "傾斜ウォーキング": { file: "傾斜ウォーキング.png", muscle: "体幹", type: "cardio" }
+        };
+
+        function getExerciseThumbnailHtml(exName, extraClass = "w-12 h-12") {
+            const info = EXERCISE_IMAGE_MAP[exName];
+            const fileName = info ? info.file : null;
+            if (fileName) {
+                return `<img src="${fileName}" alt="${exName}" class="${extraClass} rounded-xl object-cover border border-[#E5E5EA] bg-white shrink-0" onerror="this.replaceWith(createFallbackElement('${exName}', '${extraClass}'));">`;
+            }
+            return createFallbackElement(exName, extraClass).outerHTML;
+        }
+
+        function createFallbackElement(exName, extraClass) {
+            const div = document.createElement('div');
+            div.className = `${extraClass} rounded-xl bg-[#F2F2F7] text-[#111827] font-bold text-xs flex items-center justify-center border border-[#E5E5EA] shrink-0`;
+            div.textContent = exName ? exName.charAt(0) : '筋';
+            return div;
+        }
+
+        const DEFAULT_WEEKLY_TEMPLATES = {
+            0: {
+                title: '下半身B', badge: '筋トレ', subtitle: '脚・お尻・体幹',
+                exercises: [
+                    { id: 'sun-1', name: 'ブルガリアンスクワット', muscle: '脚', type: 'strength', targetReps: '20', restSeconds: 90, sets: [{ weight: 10, reps: 20, done: false }, { weight: 12, reps: 20, done: false }] },
+                    { id: 'sun-2', name: 'ヒップスラスト', muscle: 'お尻', type: 'strength', targetReps: '10〜12', restSeconds: 90, sets: [{ weight: 60, reps: 12, done: false }, { weight: 70, reps: 10, done: false }] },
+                    { id: 'sun-3', name: 'レッグエクステンション', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 60, sets: [{ weight: 35, reps: 12, done: false }, { weight: 40, reps: 12, done: false }] },
+                    { id: 'sun-4', name: 'レッグカール', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 60, sets: [{ weight: 35, reps: 12, done: false }, { weight: 40, reps: 12, done: false }] },
+                    { id: 'sun-5', name: 'カーフレイズ', muscle: '脚', type: 'strength', targetReps: '15', restSeconds: 60, sets: [{ weight: 40, reps: 15, done: false }, { weight: 40, reps: 15, done: false }] },
+                    { id: 'sun-6', name: 'プランク', muscle: '体幹', type: 'cardio', duration: '30〜45秒 × 2', restSeconds: 45, done: false }
+                ]
+            },
+            1: { title: '完全休養', badge: '休養日', subtitle: '筋肉・身体全体の回復', exercises: [] },
+            2: {
+                title: '上半身A', badge: '筋トレ', subtitle: '胸・背中・肩・腕',
+                exercises: [
+                    { id: 'tue-1', name: 'チェストプレス', muscle: '胸', type: 'strength', targetReps: '10〜12', restSeconds: 90, sets: [{ weight: 40, reps: 12, done: false }, { weight: 45, reps: 10, done: false }, { weight: 45, reps: 10, done: false }] },
+                    { id: 'tue-2', name: 'ラットプルダウン', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, sets: [{ weight: 45, reps: 12, done: false }, { weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }] },
+                    { id: 'tue-3', name: 'シーテッドロー', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, sets: [{ weight: 40, reps: 12, done: false }, { weight: 45, reps: 10, done: false }] },
+                    { id: 'tue-4', name: 'サイドレイズ', muscle: '肩', type: 'strength', targetReps: '12〜15', restSeconds: 60, sets: [{ weight: 7, reps: 15, done: false }, { weight: 8, reps: 12, done: false }] },
+                    { id: 'tue-5', name: 'ダンベルカール', muscle: '腕', type: 'strength', targetReps: '10〜12', restSeconds: 60, sets: [{ weight: 10, reps: 12, done: false }, { weight: 10, reps: 10, done: false }] },
+                    { id: 'tue-6', name: 'トライセプスプレスダウン', muscle: '腕', type: 'strength', targetReps: '10〜12', restSeconds: 60, sets: [{ weight: 20, reps: 12, done: false }, { weight: 25, reps: 10, done: false }] }
+                ]
+            },
+            3: {
+                title: '下半身A', badge: '筋トレ', subtitle: '太もも・お尻・体幹',
+                exercises: [
+                    { id: 'wed-1', name: 'レッグプレス', muscle: '脚', type: 'strength', targetReps: '10〜12', restSeconds: 120, sets: [{ weight: 100, reps: 12, done: false }, { weight: 120, reps: 10, done: false }, { weight: 120, reps: 10, done: false }] },
+                    { id: 'wed-2', name: 'ルーマニアンデッドリフト', muscle: 'お尻', type: 'strength', targetReps: '10', restSeconds: 120, sets: [{ weight: 50, reps: 10, done: false }, { weight: 60, reps: 10, done: false }] },
+                    { id: 'wed-3', name: 'レッグカール', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 90, sets: [{ weight: 35, reps: 12, done: false }, { weight: 40, reps: 12, done: false }] },
+                    { id: 'wed-4', name: 'カーフレイズ', muscle: '脚', type: 'strength', targetReps: '15', restSeconds: 60, sets: [{ weight: 40, reps: 15, done: false }, { weight: 40, reps: 15, done: false }] },
+                    { id: 'wed-5', name: 'デッドバグ', muscle: '体幹', type: 'strength', targetReps: '20', restSeconds: 60, sets: [{ weight: 0, reps: 20, done: false }, { weight: 0, reps: 20, done: false }] }
+                ]
+            },
+            4: {
+                title: '有酸素＋体幹', badge: '軽めの日', subtitle: 'ウォーキング・腹部',
+                exercises: [
+                    { id: 'thu-1', name: '傾斜ウォーキング', muscle: '体幹', type: 'cardio', duration: '25〜30分', restSeconds: 60, done: false },
+                    { id: 'thu-2', name: 'プランク', muscle: '体幹', type: 'cardio', duration: '30〜45秒 × 2', restSeconds: 45, done: false },
+                    { id: 'thu-3', name: 'サイドプランク', muscle: '体幹', type: 'cardio', duration: '左右20〜30秒 × 2', restSeconds: 45, done: false },
+                    { id: 'thu-4', name: 'ストレッチ', muscle: '体幹', type: 'cardio', duration: '5〜10分', restSeconds: 30, done: false }
+                ]
+            },
+            5: { title: '完全休養', badge: '休養日', subtitle: '土日のトレーニングに備える', exercises: [] },
+            6: {
+                title: '上半身B', badge: '筋トレ', subtitle: '胸・背中・肩を重点的に',
+                exercises: [
+                    { id: 'sat-1', name: 'ラットプルダウン', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, sets: [{ weight: 45, reps: 12, done: false }, { weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }] },
+                    { id: 'sat-2', name: 'インクラインダンベルプレス', muscle: '胸', type: 'strength', targetReps: '10〜12', restSeconds: 90, sets: [{ weight: 16, reps: 12, done: false }, { weight: 18, reps: 10, done: false }, { weight: 18, reps: 10, done: false }] },
+                    { id: 'sat-3', name: 'シーテッドロー', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, sets: [{ weight: 40, reps: 12, done: false }, { weight: 45, reps: 10, done: false }] },
+                    { id: 'sat-4', name: 'サイドレイズ', muscle: '肩', type: 'strength', targetReps: '12〜15', restSeconds: 60, sets: [{ weight: 7, reps: 15, done: false }, { weight: 8, reps: 12, done: false }] },
+                    { id: 'sat-5', name: 'リアデルトフライ', muscle: '肩', type: 'strength', targetReps: '12〜15', restSeconds: 60, sets: [{ weight: 25, reps: 15, done: false }, { weight: 30, reps: 12, done: false }] },
+                    { id: 'sat-6', name: 'ペックフライ', muscle: '胸', type: 'strength', targetReps: '12〜15', restSeconds: 60, sets: [{ weight: 35, reps: 15, done: false }, { weight: 40, reps: 12, done: false }] }
+                ]
+            }
+        };
+
+        function migrateAndNormalizeData(raw) {
+            const base = { schemaVersion: CURRENT_SCHEMA_VERSION, weeklyTemplates: JSON.parse(JSON.stringify(DEFAULT_WEEKLY_TEMPLATES)), dateOverrides: {}, workoutHistory: [], weightLogs: {} };
+            if (!raw || typeof raw !== 'object') return base;
+            if (raw.weeklyTemplates) base.weeklyTemplates = raw.weeklyTemplates;
+            if (raw.dateOverrides) base.dateOverrides = raw.dateOverrides;
+            if (raw.weightLogs) base.weightLogs = raw.weightLogs;
+            if (Array.isArray(raw.workoutHistory)) base.workoutHistory = raw.workoutHistory.filter(h => !h.isSample);
+            return base;
+        }
+
+        let appData = migrateAndNormalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'));
+        function saveAppData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            const badge = document.getElementById('save-status-badge');
+            if (badge) { badge.textContent = '保存しました'; setTimeout(() => badge.textContent = '保存済み', 1200); }
+        }
+
+        function resetToDefaultData() {
+            if (confirm('初期メニューに戻しますか？')) {
+                localStorage.removeItem(STORAGE_KEY);
+                appData = migrateAndNormalizeData(null);
+                saveAppData();
+                renderAll();
+            }
+        }
+
+        function copySyncCode() {
+            try {
+                const payload = { v: CURRENT_SCHEMA_VERSION, t: appData.weeklyTemplates, o: appData.dateOverrides, h: appData.workoutHistory, w: appData.weightLogs };
+                const code = 'BODYLOG:' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+                navigator.clipboard.writeText(code).then(() => {
+                    document.getElementById('sync-code-copied-msg').classList.remove('hidden');
+                });
+            } catch (e) { alert('コピー失敗'); }
+        }
+
+        function importSyncCode() {
+            const rawInput = document.getElementById('sync-code-input').value.trim();
+            if (!rawInput) return;
+            try {
+                const base64Part = rawInput.startsWith('BODYLOG:') ? rawInput.slice(8) : rawInput;
+                const parsed = JSON.parse(decodeURIComponent(escape(atob(base64Part))));
+                appData = migrateAndNormalizeData(parsed.v ? { weeklyTemplates: parsed.t, dateOverrides: parsed.o, workoutHistory: parsed.h, weightLogs: parsed.w } : parsed);
+                saveAppData();
+                renderAll();
+                alert('✓ 復元しました！');
+                switchMainView('home');
+            } catch (e) { alert('無効なコードです'); }
+        }
+
+        function exportBackupFile() {
+            const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bodylog-${formatDateKey(new Date())}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importBackupFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    appData = migrateAndNormalizeData(JSON.parse(e.target.result));
+                    saveAppData();
+                    renderAll();
+                    alert('✓ 復元しました！');
+                    switchMainView('home');
+                } catch (err) { alert('読み込み失敗'); }
+            };
+            reader.readAsText(file);
+        }
+
+        let selectedDate = new Date();
+        let calendarViewMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        let calendarMode = 'week';
+
+        function switchMainView(v) {
+            ['home', 'data', 'sync'].forEach(name => {
+                document.getElementById(`view-${name}`).classList.toggle('hidden', name !== v);
+                const pcBtn = document.getElementById(`nav-pc-${name}`);
+                if (pcBtn) pcBtn.className = name === v ? 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold bg-[#F2F2F7] text-[#111827]' : 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F2F2F7]/60';
+                const mobBtn = document.getElementById(`nav-mob-${name}`);
+                if (mobBtn) mobBtn.className = name === v ? 'flex flex-col items-center justify-center text-[#007AFF]' : 'flex flex-col items-center justify-center text-[#8E8E93]';
+            });
+            if (v === 'home') renderHomeGrowthChart();
+            else if (v === 'data') renderDataTab();
+        }
+
+        function formatDateKey(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function getScheduleForDate(d) {
+            const key = formatDateKey(d);
+            if (!appData.dateOverrides[key]) {
+                appData.dateOverrides[key] = JSON.parse(JSON.stringify(appData.weeklyTemplates[d.getDay()]));
+                saveAppData();
+            }
+            return appData.dateOverrides[key];
+        }
+
+        function setCalendarMode(m) {
+            calendarMode = m;
+            document.getElementById('btn-mode-week').className = m === 'week' ? 'px-3 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-3 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            document.getElementById('btn-mode-month').className = m === 'month' ? 'px-3 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-3 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            renderCalendar();
+        }
+
+        function shiftCalendar(delta) {
+            if (calendarMode === 'week') {
+                selectedDate.setDate(selectedDate.getDate() + (delta * 7));
+                calendarViewMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+            } else {
+                calendarViewMonth = new Date(calendarViewMonth.getFullYear(), calendarViewMonth.getMonth() + delta, 1);
+                selectedDate = new Date(calendarViewMonth.getFullYear(), calendarViewMonth.getMonth(), 1);
+            }
+            renderAll();
+        }
+
+        function jumpToToday() {
+            selectedDate = new Date();
+            calendarViewMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+            renderAll();
+        }
+
+        function selectDate(y, m, d) {
+            selectedDate = new Date(y, m, d);
+            calendarViewMonth = new Date(y, m, 1);
+            renderAll();
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            const y = calendarViewMonth.getFullYear();
+            const m = calendarViewMonth.getMonth();
+            document.getElementById('calendar-month-title').textContent = `${y}年 ${m + 1}月`;
+
+            if (calendarMode === 'week') {
+                const startOfWeek = new Date(selectedDate);
+                startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+                let html = '<div class="grid grid-cols-7 gap-1 sm:gap-2">';
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(startOfWeek);
+                    d.setDate(startOfWeek.getDate() + i);
+                    const isSelected = formatDateKey(d) === formatDateKey(selectedDate);
+                    const sched = getScheduleForDate(d);
+                    const dotColor = sched.badge === '筋トレ' ? '#007AFF' : sched.badge === '軽めの日' ? '#34C759' : '#D1D1D6';
+
+                    html += `
+                        <button onclick="selectDate(${d.getFullYear()}, ${d.getMonth()}, ${d.getDate()})"
+                                class="flex flex-col items-center py-2 px-0.5 rounded-xl transition-all cursor-pointer ${isSelected ? 'bg-[#F2F2F7]' : 'hover:bg-[#F2F2F7]/50'}">
+                          <span class="text-[11px] font-medium ${isSelected ? 'text-[#007AFF] font-semibold' : 'text-[#8E8E93]'} mb-1">${WEEKDAY_NAMES[d.getDay()]}</span>
+                          <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold tabular-nums mb-1 ${isSelected ? 'bg-[#007AFF] text-white' : 'text-[#111827]'}">${d.getDate()}</span>
+                          <span class="text-[9px] sm:text-[10px] font-medium truncate max-w-full px-0.5 ${sched.badge === '休養日' ? 'text-[#8E8E93]' : 'text-[#111827]'}">${sched.title.replace('完全', '')}</span>
+                          <span class="w-1.5 h-1.5 rounded-full mt-1" style="background-color: ${dotColor};"></span>
+                        </button>
+                    `;
+                }
+                container.innerHTML = html + '</div>';
+            } else {
+                const firstDay = new Date(y, m, 1);
+                const lastDay = new Date(y, m + 1, 0);
+                let html = '<div class="grid grid-cols-7 gap-1 text-center mb-1.5">';
+                WEEKDAY_NAMES.forEach((w, i) => {
+                    const color = i === 0 ? 'text-rose-500' : i === 6 ? 'text-[#007AFF]' : 'text-[#8E8E93]';
+                    html += `<div class="text-[11px] font-semibold ${color} py-1">${w}</div>`;
+                });
+                html += '</div><div class="grid grid-cols-7 gap-1 sm:gap-1.5">';
+                for (let i = 0; i < firstDay.getDay(); i++) html += `<div class="h-16 sm:h-20 rounded-xl bg-[#F2F2F7]/30"></div>`;
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const d = new Date(y, m, day);
+                    const isSelected = formatDateKey(d) === formatDateKey(selectedDate);
+                    const sched = getScheduleForDate(d);
+                    const isRest = sched.badge === '休養日';
+                    const badgeBg = isRest ? 'bg-[#E5E5EA] text-[#6E6E73]' : sched.badge === '筋トレ' ? 'bg-[#EBF5FF] text-[#007AFF]' : 'bg-emerald-50 text-emerald-700';
+
+                    html += `
+                        <button onclick="selectDate(${y}, ${m}, ${day})"
+                                class="h-16 sm:h-20 p-1 sm:p-1.5 rounded-xl border text-left flex flex-col justify-between cursor-pointer transition-all ${isSelected ? 'border-[#007AFF] bg-[#EBF5FF]/30 ring-1 ring-[#007AFF]' : 'border-[#E5E5EA]/70 hover:bg-[#F2F2F7]/50'}">
+                          <span class="text-xs sm:text-sm font-bold tabular-nums ${isSelected ? 'text-[#007AFF]' : 'text-[#111827]'}>${day}</span>
+                          <span class="text-[9px] sm:text-[11px] font-semibold px-1 py-0.5 rounded-md truncate w-full text-center ${badgeBg}">${sched.title}</span>
+                        </button>
+                    `;
+                }
+                container.innerHTML = html + '</div>';
+            }
+        }
+
+        function renderWeightCard() {
+            const dateKey = formatDateKey(selectedDate);
+            document.getElementById('weight-card-date-label').textContent = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日の体重`;
+            document.getElementById('daily-weight-input').value = appData.weightLogs[dateKey] ?? '';
+        }
+
+        function saveDailyWeight() {
+            const val = parseFloat(document.getElementById('daily-weight-input').value);
+            const dateKey = formatDateKey(selectedDate);
+            if (isNaN(val)) delete appData.weightLogs[dateKey];
+            else appData.weightLogs[dateKey] = val;
+            saveAppData();
+            renderWeightCard();
+            renderHomeGrowthChart();
+        }
+
+        let expandedHomeExercises = {};
+        function toggleHomeExerciseAccordion(idx) {
+            expandedHomeExercises[idx] = !expandedHomeExercises[idx];
+            renderWorkoutSection();
+        }
+
+        function renderWorkoutSection() {
+            const sched = getScheduleForDate(selectedDate);
+            document.getElementById('workout-card-heading').textContent = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日(${WEEKDAY_NAMES[selectedDate.getDay()]}) ${sched.title}`;
+            document.getElementById('schedule-subtitle').textContent = sched.subtitle || '';
+
+            const badgeEl = document.getElementById('schedule-type-badge');
+            badgeEl.textContent = sched.badge;
+            badgeEl.className = sched.badge === '筋トレ' ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF5FF] text-[#007AFF]' : sched.badge === '軽めの日' ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700' : 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F2F2F7] text-[#8E8E93]';
+
+            const container = document.getElementById('exercise-list-container');
+            let totalVolume = 0;
+
+            if (!sched.exercises || sched.exercises.length === 0) {
+                document.getElementById('exercise-count-display').textContent = '休養日';
+                document.getElementById('total-volume-display').textContent = '0kg';
+                document.getElementById('total-duration-display').textContent = '0分';
+                container.innerHTML = `
+                    <div class="ios-card p-6 text-center">
+                        <p class="text-sm font-bold text-[#111827] mb-1">${sched.title}</p>
+                        <p class="text-xs text-[#8E8E93] mb-4">${sched.subtitle || '休養日です'}</p>
+                        <button onclick="openAddExerciseModal()" class="px-4 py-2 rounded-xl bg-[#F2F2F7] text-[#111827] text-xs font-semibold cursor-pointer">＋ 種目を追加</button>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('exercise-count-display').textContent = `${sched.exercises.length}種目`;
+
+            container.innerHTML = sched.exercises.map((ex, idx) => {
+                const isExpanded = !!expandedHomeExercises[idx];
+                const thumb = getExerciseThumbnailHtml(ex.name, "w-11 h-11");
+
+                if (ex.type === 'cardio') {
+                    return `
+                        <div class="ios-card p-3.5 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                ${thumb}
+                                <div>
+                                    <h3 class="text-sm font-bold text-[#111827]">${ex.name}</h3>
+                                    <span class="text-xs text-[#8E8E93]">${ex.duration} ・ 休憩 ${ex.restSeconds || 60}秒</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                (ex.sets || []).forEach(s => { if (s.done) totalVolume += (s.weight || 0) * (s.reps || 0); });
+
+                const setsHtml = (ex.sets || []).map((s, sIdx) => `
+                    <div class="flex items-center justify-between py-1.5 px-3 rounded-lg bg-[#F2F2F7] text-xs tabular-nums">
+                        <span class="font-semibold text-[#8E8E93]">SET ${sIdx + 1}</span>
+                        <span class="font-bold text-[#111827]">${s.weight}kg × ${s.reps}回</span>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="ios-card overflow-hidden">
+                        <div onclick="toggleHomeExerciseAccordion(${idx})" class="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#F2F2F7]/30">
+                            <div class="flex items-center gap-3">
+                                ${thumb}
+                                <div>
+                                    <h3 class="text-sm font-bold text-[#111827]">${ex.name}</h3>
+                                    <span class="text-xs text-[#8E8E93]">${ex.sets?.length || 1}セット ・ 休憩 ${ex.restSeconds || 90}秒</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-[#007AFF] font-semibold">${isExpanded ? '閉じる ▲' : '詳細 ▼'}</span>
+                        </div>
+                        <div class="${isExpanded ? 'block' : 'hidden'} px-4 pb-4 pt-1 border-t border-[#E5E5EA] space-y-1.5 bg-white">
+                            <div class="text-[11px] font-semibold text-[#8E8E93] mb-1">予定セット内容</div>
+                            ${setsHtml}
+                            <div class="flex justify-end pt-2">
+                                <button onclick="openPreWorkoutScreen()" class="text-xs font-semibold text-[#007AFF]">ワークを開始して変更 ›</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const hist = appData.workoutHistory.find(h => h.date === formatDateKey(selectedDate));
+            const mins = hist ? Math.max(1, Math.round(hist.durationSec / 60)) : 0;
+            document.getElementById('total-volume-display').textContent = `${totalVolume.toLocaleString()}kg`;
+            document.getElementById('total-duration-display').textContent = `${mins}分`;
+        }
+
+        // ==========================================
+        // ワークアウト実行フロー
+        // ==========================================
+        let woSession = { exIndex: 0, setIndex: 0, workSeconds: 0, restRemaining: 90, intervalId: null };
+
+        function openPreWorkoutScreen() {
+            const sched = getScheduleForDate(selectedDate);
+            if (!sched.exercises || sched.exercises.length === 0) {
+                alert('本日は休養日です。「＋ 種目追加」から種目を追加してください。');
+                return;
+            }
+            document.getElementById('wo-preview-title').textContent = sched.title;
+            renderPreWorkoutList();
+            showWorkoutStep('wo-step-preview');
+            document.getElementById('workout-session-overlay').classList.remove('hidden');
+        }
+
+        function closeWorkoutOverlay() {
+            clearWorkoutTimer();
+            document.getElementById('workout-session-overlay').classList.add('hidden');
+            renderAll();
+        }
+
+        function showWorkoutStep(stepId) {
+            ['wo-step-preview', 'wo-step-ready', 'wo-step-active', 'wo-step-rest'].forEach(id => {
+                document.getElementById(id).classList.toggle('hidden', id !== stepId);
+            });
+        }
+
+        function renderPreWorkoutList() {
+            const sched = getScheduleForDate(selectedDate);
+            const listEl = document.getElementById('wo-preview-list');
+
+            listEl.innerHTML = sched.exercises.map((ex, exIdx) => {
+                const rest = ex.restSeconds || 90;
+                const thumb = getExerciseThumbnailHtml(ex.name, "w-14 h-14");
+
+                if (ex.type === 'cardio' || ex.muscle === '体幹') {
+                    const setsHtml = (ex.sets || []).map((s, sIdx) => `
+                        <div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-[#F2F2F7] text-xs">
+                            <span class="font-semibold text-[#8E8E93] w-10">SET ${sIdx + 1}</span>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number" value="${s.reps}" onchange="updatePreWorkoutSet(${exIdx}, ${sIdx}, 'reps', this.value)"
+                                       class="w-20 text-center py-1 rounded-lg bg-white text-sm font-bold text-[#111827] tabular-nums focus:outline-none focus:ring-1 focus:ring-[#007AFF]" />
+                                <span class="text-[#8E8E93]">秒</span>
+                            </div>
+                            <button onclick="deletePreWorkoutSet(${exIdx}, ${sIdx})" class="text-rose-600 font-bold px-1.5 cursor-pointer">×</button>
+                        </div>
+                    `).join('');
+
+                    return `
+                        <div class="ios-card p-4">
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="flex items-center gap-3">
+                                    ${thumb}
+                                    <div>
+                                        <h4 class="text-sm sm:text-base font-bold text-[#111827]">${ex.name}</h4>
+                                        <span class="text-xs text-[#6E6E73]">${ex.muscle || '体幹'}（秒数設定）</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="addPreWorkoutSet(${exIdx})" class="text-xs font-semibold text-[#007AFF] cursor-pointer">＋セット</button>
+                                    <button onclick="deleteExercise(${exIdx}); renderPreWorkoutList();" class="text-xs text-rose-600 font-semibold cursor-pointer">削除</button>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5 mb-3">${setsHtml}</div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[11px] font-semibold text-[#6E6E73]">インターバル</span>
+                                    <span id="rest-label-${exIdx}" class="text-xs font-bold text-[#007AFF] tabular-nums">${rest}秒</span>
+                                </div>
+                                <input type="range" min="15" max="300" step="15" value="${rest}" oninput="handleIntervalDrag(${exIdx}, this.value)" class="interval-slider" />
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const setsHtml = (ex.sets || []).map((s, sIdx) => `
+                    <div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-[#F2F2F7] text-xs">
+                        <span class="font-semibold text-[#8E8E93] w-10">SET ${sIdx + 1}</span>
+                        <div class="flex items-center gap-1.5">
+                            <input type="number" step="0.5" value="${s.weight}" onchange="updatePreWorkoutSet(${exIdx}, ${sIdx}, 'weight', this.value)"
+                                   class="w-16 text-center py-1 rounded-lg bg-white text-sm font-bold text-[#111827] tabular-nums focus:outline-none focus:ring-1 focus:ring-[#007AFF]" />
+                            <span class="text-[#8E8E93]">kg</span>
+                            <span class="mx-0.5">×</span>
+                            <input type="number" value="${s.reps}" onchange="updatePreWorkoutSet(${exIdx}, ${sIdx}, 'reps', this.value)"
+                                   class="w-14 text-center py-1 rounded-lg bg-white text-sm font-bold text-[#111827] tabular-nums focus:outline-none focus:ring-1 focus:ring-[#007AFF]" />
+                            <span class="text-[#8E8E93]">回</span>
+                        </div>
+                        <button onclick="deletePreWorkoutSet(${exIdx}, ${sIdx})" class="text-rose-600 font-bold px-1.5 cursor-pointer">×</button>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="ios-card p-4">
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div class="flex items-center gap-3">
+                                ${thumb}
+                                <div>
+                                    <h4 class="text-sm sm:text-base font-bold text-[#111827]">${ex.name}</h4>
+                                    <span class="text-xs text-[#6E6E73]">${ex.muscle || '胸'}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="addPreWorkoutSet(${exIdx})" class="text-xs font-semibold text-[#007AFF] cursor-pointer">＋セット</button>
+                                <button onclick="deleteExercise(${exIdx}); renderPreWorkoutList();" class="text-xs text-rose-600 font-semibold cursor-pointer">削除</button>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 mb-3">${setsHtml}</div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[11px] font-semibold text-[#6E6E73]">インターバル</span>
+                                <span id="rest-label-${exIdx}" class="text-xs font-bold text-[#007AFF] tabular-nums">${rest}秒</span>
+                            </div>
+                            <input type="range" min="15" max="300" step="15" value="${rest}" oninput="handleIntervalDrag(${exIdx}, this.value)" class="interval-slider" />
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updatePreWorkoutSet(exIdx, setIdx, field, val) {
+            const sched = getScheduleForDate(selectedDate);
+            sched.exercises[exIdx].sets[setIdx][field] = parseFloat(val) || 0;
+            saveAppData();
+        }
+
+        function addPreWorkoutSet(exIdx) {
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[exIdx];
+            const sets = ex.sets;
+            const last = sets[sets.length - 1] || { weight: 20, reps: 10 };
+            sets.push({ weight: last.weight, reps: last.reps, done: false });
+            saveAppData();
+            renderPreWorkoutList();
+        }
+
+        function deletePreWorkoutSet(exIdx, setIdx) {
+            const sched = getScheduleForDate(selectedDate);
+            if (sched.exercises[exIdx].sets.length <= 1) { alert('最低1セット必要です'); return; }
+            sched.exercises[exIdx].sets.splice(setIdx, 1);
+            saveAppData();
+            renderPreWorkoutList();
+        }
+
+        function deleteExercise(exIdx) {
+            const sched = getScheduleForDate(selectedDate);
+            sched.exercises.splice(exIdx, 1);
+            saveAppData();
+            renderWorkoutSection();
+        }
+
+        function handleIntervalDrag(exIdx, newSec) {
+            const sec = parseInt(newSec, 10);
+            const sched = getScheduleForDate(selectedDate);
+            sched.exercises[exIdx].restSeconds = sec;
+            document.getElementById(`rest-label-${exIdx}`).textContent = `${sec}秒`;
+            saveAppData();
+        }
+
+        function beginWorkoutFlow() {
+            const sched = getScheduleForDate(selectedDate);
+            let firstEx = sched.exercises.findIndex(ex => ex.type === 'cardio' ? !ex.done : ex.sets.some(s => !s.done));
+            if (firstEx === -1) firstEx = 0;
+            woSession.exIndex = firstEx;
+            prepareExerciseReadyScreen();
+        }
+
+        function prepareExerciseReadyScreen() {
+            clearWorkoutTimer();
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[woSession.exIndex];
+            if (!ex) { alert('ワーク完了！お疲れ様でした'); closeWorkoutOverlay(); return; }
+
+            if (ex.type === 'cardio') woSession.setIndex = 0;
+            else {
+                let nextSet = ex.sets.findIndex(s => !s.done);
+                if (nextSet === -1) nextSet = 0;
+                woSession.setIndex = nextSet;
+            }
+
+            document.getElementById('wo-ready-progress').textContent = `種目 ${woSession.exIndex + 1} / ${sched.exercises.length}`;
+
+            // 画像を1.7倍に拡大し、背景色と同化（mix-blend-multiplyで白い浮きを完全に消去）
+            document.getElementById('wo-ready-img-container').innerHTML = getExerciseThumbnailHtml(ex.name, "w-64 h-64 object-contain bg-transparent border-0 shadow-none mix-blend-multiply");
+
+            document.getElementById('wo-ready-muscle').textContent = ex.muscle || '';
+            document.getElementById('wo-ready-ex-name').textContent = ex.name;
+            document.getElementById('wo-ready-meta').textContent = ex.type === 'cardio' ? `${ex.duration}` : `全${ex.sets.length}セット ・ 休憩 ${ex.restSeconds || 90}秒`;
+            document.getElementById('wo-start-exercise-btn').textContent = `${ex.name}をスタート`;
+
+            showWorkoutStep('wo-step-ready');
+        }
+
+        function startCurrentExercise() { startSetWorkTimer(); }
+
+        function startSetWorkTimer() {
+            clearWorkoutTimer();
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[woSession.exIndex];
+            woSession.workSeconds = 0;
+            document.getElementById('wo-active-ex-name').textContent = ex.name;
+
+            if (ex.type === 'cardio' || ex.muscle === '体幹') {
+                const currentSet = ex.sets[woSession.setIndex];
+                document.getElementById('wo-active-set-badge').textContent = `SET ${woSession.setIndex + 1} / ${ex.sets.length} （体幹）`;
+                document.getElementById('wo-active-target').textContent = `目標: ${currentSet.reps}秒`;
+            } else {
+                const currentSet = ex.sets[woSession.setIndex];
+                document.getElementById('wo-active-set-badge').textContent = `SET ${woSession.setIndex + 1} / ${ex.sets.length}`;
+                document.getElementById('wo-active-target').textContent = `${currentSet.weight}kg × ${currentSet.reps}回`;
+            }
+
+            document.getElementById('wo-active-timer').textContent = '00:00';
+            showWorkoutStep('wo-step-active');
+
+            woSession.intervalId = setInterval(() => {
+                woSession.workSeconds++;
+                document.getElementById('wo-active-timer').textContent = formatSecToMMSS(woSession.workSeconds);
+            }, 1000);
+        }
+
+        function completeCurrentSet() {
+            clearWorkoutTimer();
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[woSession.exIndex];
+            const elapsed = Math.max(1, woSession.workSeconds);
+            ex.actualSeconds = (ex.actualSeconds || 0) + elapsed;
+
+            if (ex.type === 'cardio') {
+                ex.done = true;
+                saveAppData();
+                woSession.exIndex++;
+                prepareExerciseReadyScreen();
+                return;
+            }
+
+            ex.sets[woSession.setIndex].done = true;
+            saveAppData();
+
+            if (woSession.setIndex + 1 < ex.sets.length) {
+                woSession.setIndex++;
+                startAutoRestCountdown();
+            } else {
+                woSession.exIndex++;
+                prepareExerciseReadyScreen();
+            }
+        }
+
+        function startAutoRestCountdown() {
+            clearWorkoutTimer();
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[woSession.exIndex];
+            const nextSet = ex.sets[woSession.setIndex];
+            woSession.restRemaining = ex.restSeconds || 90;
+
+            const labelTxt = ex.muscle === '体幹' ? `次は SET ${woSession.setIndex + 1} / ${ex.sets.length}（${nextSet.reps}秒）` : `次は SET ${woSession.setIndex + 1} / ${ex.sets.length}（${nextSet.weight}kg）`;
+            document.getElementById('wo-rest-next-info').textContent = labelTxt;
+            document.getElementById('wo-rest-timer').textContent = formatSecToMMSS(woSession.restRemaining);
+            showWorkoutStep('wo-step-rest');
+
+            woSession.intervalId = setInterval(() => {
+                woSession.restRemaining--;
+                if (woSession.restRemaining <= 0) {
+                    clearWorkoutTimer();
+                    startSetWorkTimer();
+                } else {
+                    document.getElementById('wo-rest-timer').textContent = formatSecToMMSS(woSession.restRemaining);
+                }
+            }, 1000);
+        }
+
+        function adjustRestTimer(deltaSec) {
+            woSession.restRemaining = Math.max(1, woSession.restRemaining + deltaSec);
+            document.getElementById('wo-rest-timer').textContent = formatSecToMMSS(woSession.restRemaining);
+        }
+
+        function finishRestAndStartNextSet() {
+            clearWorkoutTimer();
+            startSetWorkTimer();
+        }
+
+        function abortWorkoutSession() {
+            if (confirm('ワークを中断しますか？')) closeWorkoutOverlay();
+        }
+
+        function clearWorkoutTimer() {
+            if (woSession.intervalId) { clearInterval(woSession.intervalId); woSession.intervalId = null; }
+        }
+
+        function formatSecToMMSS(sec) {
+            return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+        }
+
+        // グラフ＆データ
+        let homeChartInstance = null, detailChartInstance = null;
+        let homeChartType = 'volume', analyticsMode = 'exercise';
+
+        function setHomeChartType(type) {
+            homeChartType = type;
+            document.getElementById('home-chart-tab-volume').className = type === 'volume' ? 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            document.getElementById('home-chart-tab-weight').className = type === 'weight' ? 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            renderHomeGrowthChart();
+        }
+
+        function renderHomeGrowthChart() {
+            const ctx = document.getElementById('homeGrowthChart');
+            if (!ctx) return;
+            if (homeChartInstance) homeChartInstance.destroy();
+
+            if (homeChartType === 'weight') {
+                const entries = Object.entries(appData.weightLogs).sort((a, b) => a[0].localeCompare(b[0])).slice(-10);
+                homeChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: entries.length ? entries.map(e => e[0].slice(5)) : ['未記録'], datasets: [{ label: '体重', data: entries.length ? entries.map(e => e[1]) : [null], borderColor: '#111827', fill: true }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+                return;
+            }
+
+            const logs = appData.workoutHistory.slice(-7);
+            homeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: logs.length ? logs.map(l => l.date.slice(5)) : ['記録なし'],
+                    datasets: [{ label: '総重量(kg)', data: logs.length ? logs.map(l => l.totalVolume) : [0], backgroundColor: '#007AFF', borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function setAnalyticsMode(mode) {
+            analyticsMode = mode;
+            ['exercise', 'muscle', 'bodyweight'].forEach(m => {
+                document.getElementById(`tab-ana-${m}`).className = m === mode ? 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            });
+            document.getElementById('analytics-target-select').classList.toggle('hidden', mode === 'bodyweight');
+            populateAnalyticsSelector();
+            renderAnalyticsChart();
+        }
+
+        function populateAnalyticsSelector() {
+            const select = document.getElementById('analytics-target-select');
+            const items = new Set();
+            if (analyticsMode === 'exercise') {
+                appData.workoutHistory.forEach(h => h.exercises?.forEach(e => items.add(e.name)));
+                Object.values(appData.weeklyTemplates).forEach(t => t.exercises?.forEach(e => items.add(e.name)));
+            } else if (analyticsMode === 'muscle') {
+                ['胸', '背中', '肩', '腕', '脚', 'お尻', '体幹'].forEach(m => items.add(m));
+            }
+            select.innerHTML = Array.from(items).map(n => `<option value="${n}">${n}</option>`).join('');
+        }
+
+        function renderDataTab() {
+            let sumVol = 0, sumSec = 0;
+            appData.workoutHistory.forEach(h => { sumVol += h.totalVolume || 0; sumSec += h.durationSec || 0; });
+            const weightDates = Object.keys(appData.weightLogs).sort();
+            document.getElementById('stat-total-vol').textContent = `${sumVol.toLocaleString()}kg`;
+            document.getElementById('stat-total-time').textContent = `${Math.round(sumSec / 60)}分`;
+            document.getElementById('stat-workout-days').textContent = `${appData.workoutHistory.length}回`;
+            document.getElementById('stat-latest-weight').textContent = weightDates.length ? `${appData.weightLogs[weightDates[weightDates.length - 1]]}kg` : '-- kg';
+            populateAnalyticsSelector();
+            renderAnalyticsChart();
+        }
+
+        function renderAnalyticsChart() {
+            const ctx = document.getElementById('detailAnalyticsChart');
+            if (!ctx) return;
+            if (detailChartInstance) detailChartInstance.destroy();
+            detailChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: ['データなし'], datasets: [{ label: '推移', data: [0], borderColor: '#007AFF' }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // モーダル
+        function openScheduleModal(fromPreWorkout = false) {
+            const sched = getScheduleForDate(selectedDate);
+            document.getElementById('schedule-modal-title').textContent = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日のメニュー編集`;
+            document.getElementById('sched-title-input').value = sched.title;
+            document.getElementById('sched-badge-input').value = sched.badge;
+            document.getElementById('sched-sub-input').value = sched.subtitle || '';
+            renderModalQuickExerciseList();
+            document.getElementById('schedule-modal').classList.remove('modal-hidden');
+        }
+
+        function renderModalQuickExerciseList() {
+            const sched = getScheduleForDate(selectedDate);
+            const list = document.getElementById('modal-exercise-quick-list');
+            if (!sched.exercises || sched.exercises.length === 0) { list.innerHTML = '<p class="text-xs text-[#8E8E93] py-2">種目なし</p>'; return; }
+            list.innerHTML = sched.exercises.map((ex, idx) => `
+                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-[#F2F2F7] text-xs">
+                    <div class="flex items-center gap-2">
+                        ${getExerciseThumbnailHtml(ex.name, "w-7 h-7")}
+                        <span class="font-semibold text-[#111827]">${ex.name}</span>
+                    </div>
+                    <button type="button" onclick="deleteExercise(${idx}); renderModalQuickExerciseList();" class="text-rose-600 font-semibold cursor-pointer">削除</button>
+                </div>
+            `).join('');
+        }
+
+        function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('modal-hidden'); }
+
+        function handleSaveSchedule(e) {
+            e.preventDefault();
+            const sched = getScheduleForDate(selectedDate);
+            sched.title = document.getElementById('sched-title-input').value.trim();
+            sched.badge = document.getElementById('sched-badge-input').value;
+            sched.subtitle = document.getElementById('sched-sub-input').value.trim();
+            if (sched.badge === '休養日') sched.exercises = [];
+            saveAppData();
+            closeScheduleModal();
+            renderAll();
+        }
+
+        // 種目追加モーダル（テキスト検索＆部位絞り込み対応）
+        let currentFilterMuscle = 'すべて';
+        let currentSearchQuery = '';
+
+        function openAddExerciseModal() {
+            currentFilterMuscle = 'すべて';
+            currentSearchQuery = '';
+            document.getElementById('exercise-search-input').value = '';
+            updateMuscleChipsUI();
+            renderPresetExerciseCardsList('');
+            document.getElementById('add-exercise-modal').classList.remove('modal-hidden');
+        }
+
+        function filterPresetExercises(muscle) {
+            currentFilterMuscle = muscle;
+            updateMuscleChipsUI();
+            renderPresetExerciseCardsList(currentSearchQuery);
+        }
+
+        function onExerciseSearchInput(query) {
+            currentSearchQuery = query;
+            renderPresetExerciseCardsList(query);
+        }
+
+        function updateMuscleChipsUI() {
+            document.querySelectorAll('.muscle-chip').forEach(btn => {
+                const m = btn.getAttribute('data-muscle');
+                if (m === currentFilterMuscle) {
+                    btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-[#111827] text-white cursor-pointer muscle-chip';
+                } else {
+                    btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip';
+                }
+            });
+        }
+
+        function renderPresetExerciseCardsList(searchQuery) {
+            const listContainer = document.getElementById('preset-exercise-cards-list');
+            const entries = Object.entries(EXERCISE_IMAGE_MAP);
+
+            const filtered = entries.filter(([name, data]) => {
+                const matchMuscle = currentFilterMuscle === 'すべて' || data.muscle === currentFilterMuscle;
+                const matchSearch = !searchQuery || name.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchMuscle && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<p class="text-xs text-[#8E8E93] text-center py-4">該当する種目がありません</p>';
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map(([name, data]) => {
+                const thumb = getExerciseThumbnailHtml(name, "w-11 h-11");
+                return `
+                    <div onclick="selectPresetCard('${name}', '${data.muscle}', '${data.type}')"
+                         class="flex items-center justify-between p-2 rounded-xl bg-[#F2F2F7]/70 hover:bg-[#EBF5FF] hover:border-[#007AFF] border border-transparent transition-all cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            ${thumb}
+                            <div>
+                                <h4 class="text-sm font-bold text-[#111827] group-hover:text-[#007AFF]">${name}</h4>
+                                <span class="text-[10px] text-[#8E8E93] bg-white px-2 py-0.5 rounded-md border border-[#E5E5EA]">${data.muscle}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-semibold text-[#007AFF] opacity-0 group-hover:opacity-100 transition-opacity pr-1">選択 ›</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectPresetCard(name, muscle, type) {
+            document.getElementById('new-ex-name').value = name;
+            document.getElementById('new-ex-muscle').value = muscle;
+            document.getElementById('new-ex-type').value = type;
+            document.getElementById('selected-preview-thumb').innerHTML = getExerciseThumbnailHtml(name, "w-9 h-9");
+
+            const secondField = document.getElementById('dynamic-second-field');
+            if (muscle === '体幹') {
+                secondField.innerHTML = `
+                    <label class="block text-xs font-semibold text-[#6E6E73] mb-1">秒数(秒)</label>
+                    <input type="number" id="new-ex-weight" value="30"
+                        class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />
+                `;
+            } else {
+                secondField.innerHTML = `
+                    <label class="block text-xs font-semibold text-[#6E6E73] mb-1">重量(kg)</label>
+                    <input type="number" id="new-ex-weight" step="0.5" value="20"
+                        class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />
+                `;
+            }
+        }
+
+        function closeAddExerciseModal() { document.getElementById('add-exercise-modal').classList.add('modal-hidden'); }
+
+        function handleCreateExercise(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-ex-name').value.trim();
+            const muscle = document.getElementById('new-ex-muscle').value;
+            const type = document.getElementById('new-ex-type').value;
+            const setCount = parseInt(document.getElementById('new-ex-sets').value, 10) || 3;
+            const paramVal = parseFloat(document.getElementById('new-ex-weight').value) || 0;
+            if (!name) { alert('種目を選択してください'); return; }
+
+            const sched = getScheduleForDate(selectedDate);
+            if (sched.badge === '休養日') { sched.badge = '筋トレ'; sched.title = 'カスタムトレーニング'; }
+
+            const sets = Array.from({ length: setCount }, () => {
+                if (muscle === '体幹') {
+                    return { weight: 0, reps: paramVal, done: false }; // 体幹はrepsに秒数を格納
+                } else {
+                    return { weight: paramVal, reps: 10, done: false };
+                }
+            });
+
+            sched.exercises.push({
+                id: 'ex-' + Date.now(), name, muscle, type, targetReps: muscle === '体幹' ? `${paramVal}秒` : '10〜12', restSeconds: 90, sets
+            });
+            saveAppData();
+            closeAddExerciseModal();
+            renderAll();
+        }
+
+        function renderAll() {
+            renderCalendar();
+            renderWeightCard();
+            renderWorkoutSection();
+            renderHomeGrowthChart();
+        }
+
+        renderAll();
+    </script>
+</body>
+
+</html>
