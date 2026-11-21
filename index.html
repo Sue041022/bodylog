@@ -151,15 +151,6 @@
                 </svg>
                 推移データ
             </button>
-            <button onclick="switchMainView('sync')" id="nav-pc-sync"
-                class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F2F2F7]/60 transition-colors cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                    <polyline points="16 6 12 2 8 6" />
-                    <line x1="12" y1="2" x2="12" y2="15" />
-                </svg>
-                端末間データ同期
-            </button>
             <button onclick="openScheduleModal()"
                 class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F2F2F7]/60 transition-colors cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -185,12 +176,7 @@
         <header
             class="md:hidden sticky top-0 z-20 bg-[#F2F2F7]/90 backdrop-blur-md border-b border-black/5 px-4 h-12 flex items-center justify-between">
             <span class="font-bold text-base tracking-tight text-[#111827]">BodyLog</span>
-            <div class="flex items-center gap-3">
-                <span id="save-status-badge" class="text-[11px] font-medium text-[#8E8E93]">保存済み</span>
-                <button onclick="openScheduleModal()" class="text-xs font-semibold text-[#007AFF] cursor-pointer">
-                    メニュー設定
-                </button>
-            </div>
+            <span id="save-status-badge" class="text-[11px] font-medium text-[#8E8E93]">保存済み</span>
         </header>
 
         <!-- VIEW 1: ホーム画面 -->
@@ -249,17 +235,11 @@
                                 </button>
                             </div>
 
-                            <div class="flex items-center gap-2">
-                                <select id="home-chart-range-select" onchange="setHomeChartRange(this.value)"
-                                    class="px-2 py-1 rounded-lg bg-[#F2F2F7] text-[11px] font-semibold text-[#111827] focus:outline-none cursor-pointer">
-                                    <option value="7days">過去7日間</option>
-                                    <option value="month">月間</option>
-                                </select>
-                                <button onclick="switchMainView('data')"
-                                    class="text-xs font-semibold text-[#007AFF] cursor-pointer shrink-0">
-                                    詳細 ›
-                                </button>
-                            </div>
+                            <select id="home-chart-range-select" onchange="setHomeChartRange(this.value)"
+                                class="px-2.5 py-1 rounded-lg bg-[#F2F2F7] text-[11px] font-semibold text-[#111827] focus:outline-none cursor-pointer">
+                                <option value="7days">過去7日間</option>
+                                <option value="month">月間</option>
+                            </select>
                         </div>
                         <div id="home-chart-unit-header" class="text-[10px] font-semibold text-[#8E8E93] mb-1 h-3">
                         </div>
@@ -306,14 +286,14 @@
                     </div>
                 </div>
 
-                <!-- ③ 今日のワークアウト開始カード ＆ 画像付き種目リスト -->
+                <!-- ③ 本日のメニュー / 完了したワークカード（種目カード内包） -->
                 <div class="order-2 lg:order-1 lg:col-span-7 space-y-4">
                     <div class="ios-card p-4 sm:p-5">
                         <div class="flex items-start justify-between gap-3 mb-4">
                             <div>
                                 <div class="flex items-center gap-2 mb-0.5">
                                     <h2 id="workout-card-heading" class="text-base sm:text-lg font-bold text-[#111827]">
-                                        上半身B
+                                        本日のメニュー
                                     </h2>
                                     <span id="schedule-type-badge"
                                         class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF5FF] text-[#007AFF]">
@@ -322,9 +302,13 @@
                                 </div>
                                 <p id="schedule-subtitle" class="text-xs text-[#6E6E73]">胸・背中・肩を重点的に</p>
                             </div>
-                            <button onclick="openScheduleModal()"
+                            <button id="btn-change-schedule" onclick="openScheduleModal()"
                                 class="shrink-0 text-xs font-semibold text-[#007AFF] hover:opacity-80 px-2.5 py-1.5 rounded-lg bg-[#F2F2F7] transition-opacity cursor-pointer">
                                 予定変更
+                            </button>
+                            <button id="btn-cancel-completed-workout" type="button" onclick="cancelCompletedWorkout()"
+                                class="hidden shrink-0 text-xs font-bold text-rose-600 hover:underline cursor-pointer">
+                                完了を取り消す
                             </button>
                         </div>
 
@@ -348,14 +332,26 @@
                         </div>
 
                         <!-- ワーク全体のメモ入力エリア -->
-                        <div class="mb-4">
+                        <div id="workout-memo-section" class="mb-4">
                             <label class="block text-[11px] font-semibold text-[#6E6E73] mb-1">ワーク全体のメモ（任意）</label>
                             <input type="text" id="daily-overall-memo-input" placeholder="今日の体調や気づきなど..."
                                 onchange="saveDailyOverallMemo(this.value)"
                                 class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-xs text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#007AFF] focus:bg-white" />
                         </div>
 
-                        <div class="flex gap-2 flex-wrap sm:flex-nowrap">
+                        <!-- ワークカード内に配置する種目リスト -->
+                        <div class="space-y-2.5 mb-3" id="exercise-list-container"></div>
+
+                        <!-- 種目カードとボタン群の間に「＋種目を追加」テキストリンク（中央寄せ） -->
+                        <div id="add-exercise-link-wrap" class="mb-5 pt-1 text-center">
+                            <button type="button" onclick="openAddExerciseModal()"
+                                class="text-xs font-semibold text-[#007AFF] hover:underline cursor-pointer">
+                                ＋種目を追加
+                            </button>
+                        </div>
+
+                        <!-- 未完了時アクションボタン群 -->
+                        <div id="workout-start-actions" class="flex gap-2 flex-wrap sm:flex-nowrap">
                             <button onclick="openPreWorkoutScreen()"
                                 class="flex-1 py-3 px-3 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] active:scale-[0.99] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer">
                                 <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -367,15 +363,8 @@
                                 class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer">
                                 <span>✏️ データを入力</span>
                             </button>
-                            <button onclick="openAddExerciseModal()"
-                                class="py-3 px-3 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#111827] font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
-                                ＋ 種目追加
-                            </button>
                         </div>
                     </div>
-
-                    <!-- 画像付き種目リスト -->
-                    <div class="space-y-3" id="exercise-list-container"></div>
                 </div>
 
             </div>
@@ -386,7 +375,7 @@
     =========================================== -->
         <main id="view-data"
             class="hidden flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 md:px-8 pt-4 md:pt-7 pb-28 md:pb-12">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div>
                     <h1 class="text-lg md:text-2xl font-bold text-[#111827]">推移データ</h1>
                     <p class="text-xs text-[#6E6E73] mt-0.5">種目別・部位別の重量や運動時間、体重の変化を確認できます</p>
@@ -406,6 +395,29 @@
                         class="px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer">
                         1週間
                     </button>
+                </div>
+            </div>
+
+            <!-- 期間選択と4つのデータの間に画面中央に表示する遡りセレクター -->
+            <div id="data-period-navigator" class="flex justify-center mb-4 min-h-[32px]">
+                <div id="data-month-nav" class="hidden inline-flex items-center relative">
+                    <select id="data-month-select" onchange="onDataMonthSelect(this.value)"
+                        class="appearance-none bg-transparent border-0 rounded-none pl-2 pr-6 py-1 text-xs sm:text-sm font-bold text-[#111827] tabular-nums focus:outline-none cursor-pointer">
+                    </select>
+                    <svg class="w-3.5 h-3.5 text-[#6E6E73] pointer-events-none absolute right-1" fill="none"
+                        stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </div>
+
+                <div id="data-week-nav" class="hidden inline-flex items-center relative">
+                    <select id="data-week-select" onchange="onDataWeekSelect(this.value)"
+                        class="appearance-none bg-transparent border-0 rounded-none pl-2 pr-6 py-1 text-xs sm:text-sm font-bold text-[#111827] tabular-nums focus:outline-none cursor-pointer">
+                    </select>
+                    <svg class="w-3.5 h-3.5 text-[#6E6E73] pointer-events-none absolute right-1" fill="none"
+                        stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
                 </div>
             </div>
 
@@ -479,73 +491,10 @@
             </div>
         </main>
 
-        <!-- ==========================================
-         VIEW 3: 端末間データ同期タブ
-    =========================================== -->
-        <main id="view-sync"
-            class="hidden flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 md:px-8 pt-4 md:pt-7 pb-28 md:pb-12">
-            <div class="flex items-center justify-between mb-5">
-                <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-[#111827]">PC・スマホ データ同期</h1>
-                    <p class="text-xs text-[#6E6E73] mt-0.5">短い同期コードやファイルで端末間を引き継げます</p>
-                </div>
-                <button onclick="switchMainView('home')"
-                    class="px-3 py-1.5 rounded-lg bg-white border border-[#E5E5EA] text-xs font-semibold text-[#111827] cursor-pointer">
-                    ホームへ
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div class="ios-card p-5">
-                    <h2 class="text-sm font-bold text-[#111827] mb-1">方法1：同期コードで引き継ぐ</h2>
-                    <p class="text-xs text-[#6E6E73] leading-relaxed mb-4">
-                        「同期コードをコピー」を押し、LINE等でもう一方の端末へ送って貼り付けてください。
-                    </p>
-
-                    <div class="space-y-3">
-                        <button onclick="copySyncCode()"
-                            class="w-full py-3 px-4 rounded-xl bg-[#007AFF] hover:bg-[#0066D6] text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
-                            現在のデータを同期コードとしてコピー
-                        </button>
-                        <p id="sync-code-copied-msg" class="text-xs font-semibold text-[#007AFF] hidden">
-                            ✓ 同期コードをコピーしました。
-                        </p>
-
-                        <div class="pt-3 border-t border-[#E5E5EA]">
-                            <label class="block text-xs font-semibold text-[#6E6E73] mb-1.5">同期コードを貼り付けて復元</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="sync-code-input" placeholder="コードを貼り付け..."
-                                    class="flex-1 px-3 py-2.5 rounded-xl bg-[#F2F2F7] text-xs text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:bg-white" />
-                                <button onclick="importSyncCode()"
-                                    class="px-4 py-2.5 rounded-xl bg-[#111827] text-white text-xs font-semibold shrink-0 cursor-pointer">
-                                    読み込む
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ios-card p-5">
-                    <h2 class="text-sm font-bold text-[#111827] mb-1">方法2：ファイル共有</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
-                        <button onclick="exportBackupFile()"
-                            class="py-2.5 px-4 rounded-xl bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#111827] font-semibold text-xs sm:text-sm transition-colors cursor-pointer">
-                            ファイルを書き出す
-                        </button>
-                        <label
-                            class="py-2.5 px-4 rounded-xl border border-[#E5E5EA] hover:border-[#007AFF] text-[#111827] font-semibold text-xs sm:text-sm text-center transition-colors cursor-pointer">
-                            ファイルから読み込む
-                            <input type="file" accept=".json" onchange="importBackupFile(event)" class="hidden" />
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </main>
-
         <!-- モバイル用タブバー -->
         <nav
             class="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#E5E5EA] z-30 pb-safe">
-            <div class="grid grid-cols-4 h-14 py-1">
+            <div class="grid grid-cols-3 h-14 py-1">
                 <button onclick="switchMainView('home')" id="nav-mob-home"
                     class="flex flex-col items-center justify-center text-[#007AFF]">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -568,15 +517,6 @@
                     </svg>
                     <span class="text-[10px] font-semibold mt-0.5">推移</span>
                 </button>
-                <button onclick="switchMainView('sync')" id="nav-mob-sync"
-                    class="flex flex-col items-center justify-center text-[#8E8E93] hover:text-[#007AFF]">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                        <polyline points="16 6 12 2 8 6" />
-                        <line x1="12" y1="2" x2="12" y2="15" />
-                    </svg>
-                    <span class="text-[10px] font-semibold mt-0.5">同期</span>
-                </button>
             </div>
         </nav>
     </div>
@@ -597,17 +537,23 @@
                     <span class="text-[11px] font-semibold text-[#8E8E93] block">本日のワーク内容</span>
                     <h2 id="wo-preview-title" class="text-base font-bold text-[#111827]">上半身B</h2>
                 </div>
-                <button onclick="openScheduleModal(true)"
-                    class="px-3 py-1.5 rounded-lg bg-white border border-[#E5E5EA] text-xs font-semibold text-[#007AFF] cursor-pointer">
-                    編集
-                </button>
+                <div class="w-9 h-9"></div>
             </div>
 
             <p class="text-xs text-[#6E6E73] mb-3 px-1">
                 ここで重量やセット数、休憩時間（インターバル）、種目別メモを確認・変更できます。
             </p>
 
-            <div id="wo-preview-list" class="flex-1 space-y-3 mb-5">
+            <!-- 予定されている種目と「＋種目を追加」のグループ -->
+            <div class="flex-1 mb-6">
+                <div id="wo-preview-list" class="space-y-3 mb-3">
+                </div>
+                <div class="text-center pt-1">
+                    <button type="button" onclick="openAddExerciseModal(true)"
+                        class="text-xs font-semibold text-[#007AFF] hover:underline cursor-pointer">
+                        ＋種目を追加
+                    </button>
+                </div>
             </div>
 
             <div class="sticky bottom-4 pt-2">
@@ -717,7 +663,7 @@
                     </button>
                 </div>
 
-                <!-- ＋−ボタンの下に間隔を空け、4行分の高さを設けたメモ入力枠（プレースホルダーは灰色で「メモ」） -->
+                <!-- ＋−ボタンの下に間隔を空け、4行分の高さを設けたメモ入力枠 -->
                 <div class="w-full max-w-sm px-2 mt-2">
                     <textarea id="wo-rest-note-input" placeholder="メモ" onchange="updateRestNote(this.value)" rows="4"
                         class="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 text-xs text-gray-900 placeholder:text-[#8E8E93] focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"></textarea>
@@ -794,7 +740,7 @@
                         <span class="text-xs font-semibold text-[#6E6E73]">この日の種目</span>
                         <button type="button" onclick="closeScheduleModal(); openAddExerciseModal();"
                             class="text-xs font-semibold text-[#007AFF] cursor-pointer">
-                            ＋ 種目を追加
+                            ＋種目を追加
                         </button>
                     </div>
                     <div id="modal-exercise-quick-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
@@ -816,7 +762,7 @@
     </div>
 
     <!-- ==========================================
-       モーダル②：種目追加モーダル（セット数・重量・回数対応）
+       モーダル②：種目追加モーダル
   =========================================== -->
     <div id="add-exercise-modal"
         class="modal-backdrop modal-hidden fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -921,7 +867,7 @@
     </div>
 
     <!-- ==========================================
-       モーダル③：トレーニングデータを入力（手動入力・カテゴリ選択・左スライド削除対応）
+       モーダル③：トレーニングデータを入力
   =========================================== -->
     <div id="manual-input-modal"
         class="modal-backdrop modal-hidden fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -933,7 +879,7 @@
                     class="w-8 h-8 rounded-full bg-[#F2F2F7] flex items-center justify-center text-[#6E6E73] cursor-pointer">✕</button>
             </div>
             <p class="text-xs text-[#6E6E73] mb-4">
-                合計時間や全体メモの入力、種目ごとのカテゴリ選択や実績編集ができます。リストは左スライドで削除できます。
+                合計時間や全体メモの入力と、実施メニューの編集ができます。リストは左スライドで削除できます。
             </p>
             <form onsubmit="handleSaveManualInput(event)" class="space-y-4">
                 <div>
@@ -950,7 +896,7 @@
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-semibold text-[#6E6E73]">実施メニューの確認・編集（左スワイプで削除）</label>
                         <button type="button" onclick="closeManualInputModal(); openAddExerciseModal();"
-                            class="text-xs font-semibold text-[#007AFF] cursor-pointer">＋ 種目追加</button>
+                            class="text-xs font-semibold text-[#007AFF] cursor-pointer">＋種目を追加</button>
                     </div>
                     <div id="manual-exercises-editor-list" class="space-y-2.5 max-h-60 overflow-y-auto pr-1"></div>
                 </div>
@@ -966,12 +912,11 @@
        JavaScript
   =========================================== -->
     <script>
-        const STORAGE_KEY = 'bodylog_custom_v12';
-        const CURRENT_SCHEMA_VERSION = 17;
+        const STORAGE_KEY = 'bodylog_custom_v16';
+        const CURRENT_SCHEMA_VERSION = 21;
         const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
         const MUSCLE_CATEGORIES = ['胸', '背中', '肩', '腕', '脚', 'お尻', '体幹', '有酸素'];
 
-        // 体重グラフ用プラグイン（点の上に56.3のような数値を描画）
         const weightPointLabelPlugin = {
             id: 'weightPointLabelPlugin',
             afterDatasetsDraw(chart) {
@@ -1025,6 +970,14 @@
             "傾斜ウォーキング": { file: "傾斜ウォーキング.png", muscle: "有酸素", type: "cardio" },
             "ランニング": { file: "ランニング.png", muscle: "有酸素", type: "cardio" }
         };
+
+        function getBoundMuscleForExercise(ex) {
+            if (!ex) return '胸';
+            if (EXERCISE_IMAGE_MAP[ex.name]?.muscle) {
+                return EXERCISE_IMAGE_MAP[ex.name].muscle;
+            }
+            return ex.muscle || '胸';
+        }
 
         function isMinutesOnlyExercise(ex) {
             if (!ex) return false;
@@ -1130,62 +1083,28 @@
             }
         }
 
-        function copySyncCode() {
-            try {
-                const payload = { v: CURRENT_SCHEMA_VERSION, t: appData.weeklyTemplates, o: appData.dateOverrides, h: appData.workoutHistory, w: appData.weightLogs };
-                const code = 'BODYLOG:' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-                navigator.clipboard.writeText(code).then(() => {
-                    document.getElementById('sync-code-copied-msg').classList.remove('hidden');
-                });
-            } catch (e) { alert('コピー失敗'); }
-        }
-
-        function importSyncCode() {
-            const rawInput = document.getElementById('sync-code-input').value.trim();
-            if (!rawInput) return;
-            try {
-                const base64Part = rawInput.startsWith('BODYLOG:') ? rawInput.slice(8) : rawInput;
-                const parsed = JSON.parse(decodeURIComponent(escape(atob(base64Part))));
-                appData = migrateAndNormalizeData(parsed.v ? { weeklyTemplates: parsed.t, dateOverrides: parsed.o, workoutHistory: parsed.h, weightLogs: parsed.w } : parsed);
-                saveAppData();
-                renderAll();
-                alert('✓ 復元しました！');
-                switchMainView('home');
-            } catch (e) { alert('無効なコードです'); }
-        }
-
-        function exportBackupFile() {
-            const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'bodylog-' + formatDateKey(new Date()) + '.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importBackupFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    appData = migrateAndNormalizeData(JSON.parse(e.target.result));
-                    saveAppData();
-                    renderAll();
-                    alert('✓ 復元しました！');
-                    switchMainView('home');
-                } catch (err) { alert('読み込み失敗'); }
-            };
-            reader.readAsText(file);
-        }
-
         let selectedDate = new Date();
         let calendarViewMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
         let calendarMode = 'week';
+        let isEditingWeight = false;
+        let expandedHomeExercises = {};
+        let woSession = { exIndex: 0, setIndex: 0, workSeconds: 0, restRemaining: 90, intervalId: null };
+        let isAddingFromWorkoutPreview = false;
+        let swipeState = { startX: 0, currentEl: null };
+        let homeChartInstance = null;
+        let detailChartInstance = null;
+        let homeChartType = 'duration';
+        let homeChartRange = '7days';
+        let analyticsMode = 'exercise';
+        let analyticsMetric = 'weight';
+        let dataPeriod = 'all';
+        let selectedDataMonthKey = null;
+        let selectedDataWeekKey = null;
+        let currentFilterMuscle = 'すべて';
+        let currentSearchQuery = '';
 
         function switchMainView(v) {
-            ['home', 'data', 'sync'].forEach(name => {
+            ['home', 'data'].forEach(name => {
                 document.getElementById('view-' + name).classList.toggle('hidden', name !== v);
                 const pcBtn = document.getElementById('nav-pc-' + name);
                 if (pcBtn) pcBtn.className = name === v ? 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold bg-[#F2F2F7] text-[#111827]' : 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#6E6E73] hover:bg-[#F2F2F7]/60';
@@ -1207,6 +1126,11 @@
                 saveAppData();
             }
             return appData.dateOverrides[key];
+        }
+
+        function isSelectedDateCompleted() {
+            const dateKey = formatDateKey(selectedDate);
+            return appData.workoutHistory.some(h => h.date === dateKey);
         }
 
         function setCalendarMode(m) {
@@ -1298,11 +1222,6 @@
             }
         }
 
-        // ==========================================
-        // 体重カード（確定表示＆編集モード）
-        // ==========================================
-        let isEditingWeight = false;
-
         function renderWeightCard() {
             const dateKey = formatDateKey(selectedDate);
             const savedVal = appData.weightLogs[dateKey];
@@ -1364,7 +1283,22 @@
             renderCalendar();
         }
 
-        let expandedHomeExercises = {};
+        function cancelCompletedWorkout() {
+            const dateStr = formatDateKey(selectedDate);
+            if (!confirm('本日のワーク完了を取り消しますか？')) return;
+            appData.workoutHistory = appData.workoutHistory.filter(h => h.date !== dateStr);
+            const sched = getScheduleForDate(selectedDate);
+            if (sched && Array.isArray(sched.exercises)) {
+                sched.exercises.forEach(ex => {
+                    ex.done = false;
+                    ex.actualSeconds = 0;
+                    if (ex.sets) ex.sets.forEach(s => s.done = false);
+                });
+            }
+            saveAppData();
+            renderAll();
+        }
+
         function toggleHomeExerciseAccordion(idx) {
             expandedHomeExercises[idx] = !expandedHomeExercises[idx];
             renderWorkoutSection();
@@ -1372,25 +1306,58 @@
 
         function renderWorkoutSection() {
             const sched = getScheduleForDate(selectedDate);
-            document.getElementById('workout-card-heading').textContent = (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日(' + WEEKDAY_NAMES[selectedDate.getDay()] + ') ' + sched.title;
-            document.getElementById('schedule-subtitle').textContent = sched.subtitle || '';
+            const completed = isSelectedDateCompleted();
+
+            document.getElementById('workout-card-heading').textContent = completed
+                ? '完了したワーク'
+                : '本日のメニュー';
+            document.getElementById('schedule-subtitle').textContent =
+                (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日(' + WEEKDAY_NAMES[selectedDate.getDay()] + ') ' + sched.title + (sched.subtitle ? ' ・ ' + sched.subtitle : '');
             document.getElementById('daily-overall-memo-input').value = sched.memo || '';
 
             const badgeEl = document.getElementById('schedule-type-badge');
-            badgeEl.textContent = sched.badge;
-            badgeEl.className = sched.badge === '筋トレ' ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF5FF] text-[#007AFF]' : sched.badge === '軽めの日' ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700' : 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F2F2F7] text-[#8E8E93]';
+            const changeSchedBtn = document.getElementById('btn-change-schedule');
+            const cancelBtnEl = document.getElementById('btn-cancel-completed-workout');
+            const memoSectionEl = document.getElementById('workout-memo-section');
+            const addLinkWrapEl = document.getElementById('add-exercise-link-wrap');
+            const startActionsEl = document.getElementById('workout-start-actions');
+
+            if (completed) {
+                if (badgeEl) badgeEl.classList.add('hidden');
+                if (changeSchedBtn) changeSchedBtn.classList.add('hidden');
+                if (cancelBtnEl) cancelBtnEl.classList.remove('hidden');
+                if (memoSectionEl) memoSectionEl.classList.add('hidden');
+                if (addLinkWrapEl) addLinkWrapEl.classList.add('hidden');
+                if (startActionsEl) startActionsEl.classList.add('hidden');
+            } else {
+                if (badgeEl) {
+                    badgeEl.classList.remove('hidden');
+                    badgeEl.textContent = sched.badge;
+                    badgeEl.className = sched.badge === '筋トレ'
+                        ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF5FF] text-[#007AFF]'
+                        : sched.badge === '軽めの日'
+                            ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700'
+                            : 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F2F2F7] text-[#8E8E93]';
+                }
+                if (changeSchedBtn) changeSchedBtn.classList.remove('hidden');
+                if (cancelBtnEl) cancelBtnEl.classList.add('hidden');
+                if (memoSectionEl) memoSectionEl.classList.remove('hidden');
+                if (addLinkWrapEl) addLinkWrapEl.classList.remove('hidden');
+                if (startActionsEl) startActionsEl.classList.remove('hidden');
+            }
 
             const container = document.getElementById('exercise-list-container');
             let totalVolume = 0;
 
             if (!sched.exercises || sched.exercises.length === 0) {
-                document.getElementById('exercise-count-display').textContent = '休養日';
+                document.getElementById('exercise-count-display').textContent = completed ? '0種目' : '休養日';
                 document.getElementById('total-volume-display').textContent = '0kg';
-                document.getElementById('total-duration-display').textContent = '0分';
-                container.innerHTML = '<div class="ios-card p-6 text-center">' +
+                const hist = appData.workoutHistory.find(h => h.date === formatDateKey(selectedDate));
+                const mins = hist ? Math.max(1, Math.round(hist.durationSec / 60)) : 0;
+                document.getElementById('total-duration-display').textContent = mins + '分';
+                container.innerHTML = '<div class="p-5 rounded-xl bg-[#F2F2F7]/60 text-center">' +
                     '<p class="text-sm font-bold text-[#111827] mb-1">' + sched.title + '</p>' +
-                    '<p class="text-xs text-[#8E8E93] mb-4">' + (sched.subtitle || '休養日です') + '</p>' +
-                    '<button onclick="openAddExerciseModal()" class="px-4 py-2 rounded-xl bg-[#F2F2F7] text-[#111827] text-xs font-semibold cursor-pointer">＋ 種目を追加</button>' +
+                    '<p class="text-xs text-[#8E8E93]">' + (sched.subtitle || '休養日です') + '</p>' +
                     '</div>';
                 return;
             }
@@ -1404,60 +1371,77 @@
 
                 if (isMinutesOnlyExercise(ex)) {
                     const minsVal = ex.minutes || 20;
-                    return '<div class="ios-card p-3.5">' +
-                        '<div class="flex items-center justify-between gap-3">' +
+                    return '<div class="rounded-xl bg-[#F2F2F7]/60 p-3 flex items-center justify-between gap-3">' +
                         '<div class="flex items-center gap-3">' +
                         thumb +
                         '<div>' +
                         '<h3 class="text-sm font-bold text-[#111827]">' + ex.name + '</h3>' +
-                        '<span class="text-xs text-[#8E8E93]">' + minsVal + '分（セットなし）</span>' +
+                        '<span class="text-xs text-[#6E6E73]">' + minsVal + '分</span>' +
                         noteDisplay +
-                        '</div>' +
                         '</div>' +
                         '</div>' +
                         '</div>';
                 }
 
                 if (ex.type === 'cardio') {
-                    return '<div class="ios-card p-3.5">' +
-                        '<div class="flex items-center justify-between gap-3">' +
+                    return '<div class="rounded-xl bg-[#F2F2F7]/60 p-3 flex items-center justify-between gap-3">' +
                         '<div class="flex items-center gap-3">' +
                         thumb +
                         '<div>' +
                         '<h3 class="text-sm font-bold text-[#111827]">' + ex.name + '</h3>' +
-                        '<span class="text-xs text-[#8E8E93]">' + ex.duration + ' ・ 休憩 ' + (ex.restSeconds || 60) + '秒</span>' +
+                        '<span class="text-xs text-[#6E6E73]">' + ex.duration + (completed ? '' : ' ・ 休憩 ' + (ex.restSeconds || 60) + '秒') + '</span>' +
                         noteDisplay +
-                        '</div>' +
                         '</div>' +
                         '</div>' +
                         '</div>';
                 }
 
-                (ex.sets || []).forEach(s => { if (s.done) totalVolume += (s.weight || 0) * (s.reps || 0); });
+                (ex.sets || []).forEach(s => { if (s.done || completed) totalVolume += (s.weight || 0) * (s.reps || 0); });
 
-                const setsHtml = (ex.sets || []).map((s, sIdx) => '<div class="flex items-center justify-between py-1.5 px-3 rounded-lg bg-[#F2F2F7] text-xs tabular-nums">' +
+                if (completed) {
+                    const firstSet = ex.sets?.[0] || { weight: 0, reps: 0 };
+                    const setCount = ex.sets?.length || 1;
+                    const summaryText = firstSet.weight + 'kg × ' + firstSet.reps + '回 × ' + setCount + 'セット';
+                    const setsDetailHtml = (ex.sets || []).map((s, sIdx) => '<div class="flex items-center justify-between py-1 px-2.5 rounded-lg bg-white text-xs tabular-nums">' +
+                        '<span class="font-semibold text-[#8E8E93]">SET ' + (sIdx + 1) + '</span>' +
+                        '<span class="font-bold text-[#111827]">' + s.weight + 'kg × ' + s.reps + '回</span>' +
+                        '</div>').join('');
+
+                    return '<div class="rounded-xl bg-[#F2F2F7]/60 p-3 space-y-2">' +
+                        '<div class="flex items-center justify-between gap-3">' +
+                        '<div class="flex items-center gap-3">' +
+                        thumb +
+                        '<div>' +
+                        '<h3 class="text-sm font-bold text-[#111827]">' + ex.name + '</h3>' +
+                        '<span class="text-xs font-semibold text-[#007AFF] tabular-nums">' + summaryText + '</span>' +
+                        noteDisplay +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">' + setsDetailHtml + '</div>' +
+                        '</div>';
+                }
+
+                const setsHtml = (ex.sets || []).map((s, sIdx) => '<div class="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white text-xs tabular-nums">' +
                     '<span class="font-semibold text-[#8E8E93]">SET ' + (sIdx + 1) + '</span>' +
                     '<span class="font-bold text-[#111827]">' + s.weight + 'kg × ' + s.reps + '回</span>' +
                     '</div>').join('');
 
-                return '<div class="ios-card overflow-hidden">' +
-                    '<div onclick="toggleHomeExerciseAccordion(' + idx + ')" class="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#F2F2F7]/30">' +
+                return '<div class="rounded-xl bg-[#F2F2F7]/60 overflow-hidden">' +
+                    '<div onclick="toggleHomeExerciseAccordion(' + idx + ')" class="p-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#F2F2F7]">' +
                     '<div class="flex items-center gap-3">' +
                     thumb +
                     '<div>' +
                     '<h3 class="text-sm font-bold text-[#111827]">' + ex.name + '</h3>' +
-                    '<span class="text-xs text-[#8E8E93]">' + (ex.sets?.length || 1) + 'セット ・ 休憩 ' + (ex.restSeconds || 90) + '秒</span>' +
+                    '<span class="text-xs text-[#6E6E73]">' + (ex.sets?.length || 1) + 'セット ・ 休憩 ' + (ex.restSeconds || 90) + '秒</span>' +
                     noteDisplay +
                     '</div>' +
                     '</div>' +
                     '<span class="text-xs text-[#007AFF] font-semibold">' + (isExpanded ? '閉じる ▲' : '詳細 ▼') + '</span>' +
                     '</div>' +
-                    '<div class="' + (isExpanded ? 'block' : 'hidden') + ' px-4 pb-4 pt-1 border-t border-[#E5E5EA] space-y-1.5 bg-white">' +
+                    '<div class="' + (isExpanded ? 'block' : 'hidden') + ' px-3 pb-3 pt-1 space-y-1.5">' +
                     '<div class="text-[11px] font-semibold text-[#8E8E93] mb-1">予定セット内容</div>' +
                     setsHtml +
-                    '<div class="flex justify-end pt-2">' +
-                    '<button onclick="openPreWorkoutScreen()" class="text-xs font-semibold text-[#007AFF]">ワークを開始して変更 ›</button>' +
-                    '</div>' +
                     '</div>' +
                     '</div>';
             }).join('');
@@ -1468,15 +1452,10 @@
             document.getElementById('total-duration-display').textContent = mins + '分';
         }
 
-        // ==========================================
-        // ワークアウト実行フロー
-        // ==========================================
-        let woSession = { exIndex: 0, setIndex: 0, workSeconds: 0, restRemaining: 90, intervalId: null };
-
         function openPreWorkoutScreen() {
             const sched = getScheduleForDate(selectedDate);
             if (!sched.exercises || sched.exercises.length === 0) {
-                alert('本日は休養日です。「＋ 種目追加」から種目を追加してください。');
+                alert('本日は休養日です。「＋種目を追加」から種目を追加してください。');
                 return;
             }
             document.getElementById('wo-preview-title').textContent = sched.title;
@@ -1487,6 +1466,7 @@
 
         function closeWorkoutOverlay() {
             clearWorkoutTimer();
+            isAddingFromWorkoutPreview = false;
             document.getElementById('workout-session-overlay').classList.add('hidden');
             renderAll();
         }
@@ -1513,25 +1493,32 @@
                         thumb +
                         '<div>' +
                         '<h4 class="text-sm sm:text-base font-bold text-gray-900">' + ex.name + '</h4>' +
-                        '<span class="text-xs text-gray-500">' + (ex.muscle || '有酸素') + '（セットなし・分指定）</span>' +
+                        '<span class="text-xs text-gray-500">' + getBoundMuscleForExercise(ex) + '（分設定）</span>' +
                         '</div>' +
                         '</div>' +
                         '<button onclick="deleteExercise(' + exIdx + '); renderPreWorkoutList();" class="text-xs text-rose-600 font-semibold cursor-pointer">削除</button>' +
                         '</div>' +
-                        '<div class="flex items-center gap-2 mb-3">' +
+                        '<div class="flex items-center gap-2 mb-5">' +
                         '<span class="text-xs font-semibold text-gray-600">時間:</span>' +
                         '<input type="number" value="' + minsVal + '" min="1" onchange="updateExerciseMinutes(' + exIdx + ', this.value)"' +
                         ' class="w-20 text-center py-1 rounded-lg bg-gray-100 text-sm font-bold text-gray-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-500" />' +
                         '<span class="text-xs text-gray-500">分</span>' +
                         '</div>' +
-                        '<div>' +
+                        '<div class="space-y-3">' +
                         '<input type="text" placeholder="種目別メモ (例: フォーム意識)..." value="' + (ex.note || '') + '" onchange="updateExerciseNote(' + exIdx + ', this.value)"' +
                         ' class="w-full px-3 py-2 rounded-xl bg-gray-100 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500" />' +
+                        '<div>' +
+                        '<div class="flex justify-between items-center mb-1">' +
+                        '<span class="text-[11px] font-semibold text-gray-500">インターバル</span>' +
+                        '<span id="rest-label-' + exIdx + '" class="text-xs font-bold text-blue-600 tabular-nums">' + rest + '秒</span>' +
+                        '</div>' +
+                        '<input type="range" min="15" max="300" step="15" value="' + rest + '" oninput="handleIntervalDrag(' + exIdx + ', this.value)" class="interval-slider" />' +
+                        '</div>' +
                         '</div>' +
                         '</div>';
                 }
 
-                if (ex.type === 'cardio' || ex.muscle === '体幹' || ex.muscle === '有酸素') {
+                if (ex.type === 'cardio' || getBoundMuscleForExercise(ex) === '体幹' || getBoundMuscleForExercise(ex) === '有酸素') {
                     const setsHtml = (ex.sets || []).map((s, sIdx) => '<div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-gray-100 text-xs">' +
                         '<span class="font-semibold text-gray-500 w-10">SET ' + (sIdx + 1) + '</span>' +
                         '<div class="flex items-center gap-1.5">' +
@@ -1548,25 +1535,25 @@
                         thumb +
                         '<div>' +
                         '<h4 class="text-sm sm:text-base font-bold text-gray-900">' + ex.name + '</h4>' +
-                        '<span class="text-xs text-gray-500">' + (ex.muscle || '有酸素') + '（秒数設定）</span>' +
+                        '<span class="text-xs text-gray-500">' + getBoundMuscleForExercise(ex) + '（秒数設定）</span>' +
                         '</div>' +
                         '</div>' +
-                        '<div class="flex items-center gap-2">' +
-                        '<button onclick="addPreWorkoutSet(' + exIdx + ')" class="text-xs font-semibold text-blue-600 cursor-pointer">＋セット</button>' +
                         '<button onclick="deleteExercise(' + exIdx + '); renderPreWorkoutList();" class="text-xs text-rose-600 font-semibold cursor-pointer">削除</button>' +
                         '</div>' +
+                        '<div class="mb-5">' +
+                        '<div class="space-y-1.5 mb-2">' + setsHtml + '</div>' +
+                        '<div class="text-center"><button type="button" onclick="addPreWorkoutSet(' + exIdx + ')" class="text-xs font-semibold text-blue-600 hover:underline cursor-pointer">＋セットを追加</button></div>' +
                         '</div>' +
-                        '<div class="space-y-1.5 mb-3">' + setsHtml + '</div>' +
-                        '<div class="mb-3">' +
+                        '<div class="space-y-3">' +
                         '<input type="text" placeholder="種目別メモ (例: フォーム意識)..." value="' + (ex.note || '') + '" onchange="updateExerciseNote(' + exIdx + ', this.value)"' +
                         ' class="w-full px-3 py-2 rounded-xl bg-gray-100 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500" />' +
-                        '</div>' +
                         '<div>' +
                         '<div class="flex justify-between items-center mb-1">' +
                         '<span class="text-[11px] font-semibold text-gray-500">インターバル</span>' +
                         '<span id="rest-label-' + exIdx + '" class="text-xs font-bold text-blue-600 tabular-nums">' + rest + '秒</span>' +
                         '</div>' +
                         '<input type="range" min="15" max="300" step="15" value="' + rest + '" oninput="handleIntervalDrag(' + exIdx + ', this.value)" class="interval-slider" />' +
+                        '</div>' +
                         '</div>' +
                         '</div>';
                 }
@@ -1591,25 +1578,25 @@
                     thumb +
                     '<div>' +
                     '<h4 class="text-sm sm:text-base font-bold text-gray-900">' + ex.name + '</h4>' +
-                    '<span class="text-xs text-gray-500">' + (ex.muscle || '胸') + '</span>' +
+                    '<span class="text-xs text-gray-500">' + getBoundMuscleForExercise(ex) + '</span>' +
                     '</div>' +
                     '</div>' +
-                    '<div class="flex items-center gap-2">' +
-                    '<button onclick="addPreWorkoutSet(' + exIdx + ')" class="text-xs font-semibold text-blue-600 cursor-pointer">＋セット</button>' +
                     '<button onclick="deleteExercise(' + exIdx + '); renderPreWorkoutList();" class="text-xs text-rose-600 font-semibold cursor-pointer">削除</button>' +
                     '</div>' +
+                    '<div class="mb-5">' +
+                    '<div class="space-y-1.5 mb-2">' + setsHtml + '</div>' +
+                    '<div class="text-center"><button type="button" onclick="addPreWorkoutSet(' + exIdx + ')" class="text-xs font-semibold text-blue-600 hover:underline cursor-pointer">＋セットを追加</button></div>' +
                     '</div>' +
-                    '<div class="space-y-1.5 mb-3">' + setsHtml + '</div>' +
-                    '<div class="mb-3">' +
+                    '<div class="space-y-3">' +
                     '<input type="text" placeholder="種目別メモ (例: フォーム意識)..." value="' + (ex.note || '') + '" onchange="updateExerciseNote(' + exIdx + ', this.value)"' +
                     ' class="w-full px-3 py-2 rounded-xl bg-gray-100 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500" />' +
-                    '</div>' +
                     '<div>' +
                     '<div class="flex justify-between items-center mb-1">' +
                     '<span class="text-[11px] font-semibold text-gray-500">インターバル</span>' +
                     '<span id="rest-label-' + exIdx + '" class="text-xs font-bold text-blue-600 tabular-nums">' + rest + '秒</span>' +
                     '</div>' +
                     '<input type="range" min="15" max="300" step="15" value="' + rest + '" oninput="handleIntervalDrag(' + exIdx + ', this.value)" class="interval-slider" />' +
+                    '</div>' +
                     '</div>' +
                     '</div>';
             }).join('');
@@ -1698,7 +1685,7 @@
             document.getElementById('wo-ready-progress').textContent = '種目 ' + (woSession.exIndex + 1) + ' / ' + sched.exercises.length;
             document.getElementById('wo-ready-img-container').innerHTML = getExerciseThumbnailHtml(ex.name, "w-64 h-64 object-contain bg-transparent border-0 shadow-none mix-blend-multiply");
 
-            document.getElementById('wo-ready-muscle').textContent = ex.muscle || '';
+            document.getElementById('wo-ready-muscle').textContent = getBoundMuscleForExercise(ex);
             document.getElementById('wo-ready-ex-name').textContent = ex.name;
             document.getElementById('wo-ready-meta').textContent = ex.type === 'cardio' ? ex.duration : ('全' + ex.sets.length + 'セット ・ 休憩 ' + (ex.restSeconds || 90) + '秒');
             document.getElementById('wo-start-exercise-btn').textContent = ex.name + 'をスタート';
@@ -1719,7 +1706,7 @@
                 const minsVal = ex.minutes || 20;
                 document.getElementById('wo-active-set-badge').textContent = '有酸素（分指定）';
                 document.getElementById('wo-active-target').textContent = '目標: ' + minsVal + '分';
-            } else if (ex.type === 'cardio' || ex.muscle === '体幹' || ex.muscle === '有酸素') {
+            } else if (ex.type === 'cardio' || getBoundMuscleForExercise(ex) === '体幹' || getBoundMuscleForExercise(ex) === '有酸素') {
                 const currentSet = ex.sets[woSession.setIndex];
                 document.getElementById('wo-active-set-badge').textContent = 'SET ' + (woSession.setIndex + 1) + ' / ' + ex.sets.length;
                 document.getElementById('wo-active-target').textContent = '目標: ' + currentSet.reps + '秒';
@@ -1773,6 +1760,7 @@
             let totalVol = 0;
             let totalSec = 0;
             (sched.exercises || []).forEach(ex => {
+                ex.muscle = getBoundMuscleForExercise(ex);
                 totalSec += ex.actualSeconds || 0;
                 if (ex.sets) {
                     ex.sets.forEach(s => {
@@ -1801,7 +1789,7 @@
             const nextSet = ex.sets[woSession.setIndex];
             woSession.restRemaining = ex.restSeconds || 90;
 
-            const labelTxt = (ex.muscle === '体幹' || ex.muscle === '有酸素') ? ('次は SET ' + (woSession.setIndex + 1) + ' / ' + ex.sets.length + '（' + nextSet.reps + '秒）') : ('次は SET ' + (woSession.setIndex + 1) + ' / ' + ex.sets.length + '（' + nextSet.weight + 'kg）');
+            const labelTxt = (getBoundMuscleForExercise(ex) === '体幹' || getBoundMuscleForExercise(ex) === '有酸素') ? ('次は SET ' + (woSession.setIndex + 1) + ' / ' + ex.sets.length + '（' + nextSet.reps + '秒）') : ('次は SET ' + (woSession.setIndex + 1) + ' / ' + ex.sets.length + '（' + nextSet.weight + 'kg）');
             document.getElementById('wo-rest-next-info').textContent = labelTxt;
             document.getElementById('wo-rest-timer').textContent = formatSecToMMSS(woSession.restRemaining);
 
@@ -1852,11 +1840,6 @@
             return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
         }
 
-        // ==========================================
-        // 「トレーニングデータを入力」（手動一括入力・カテゴリ選択・左スワイプ削除対応）
-        // ==========================================
-        let swipeState = { startX: 0, currentEl: null };
-
         function openManualInputModal() {
             const sched = getScheduleForDate(selectedDate);
             const existingHist = appData.workoutHistory.find(h => h.date === formatDateKey(selectedDate));
@@ -1870,17 +1853,14 @@
             const sched = getScheduleForDate(selectedDate);
             const listEl = document.getElementById('manual-exercises-editor-list');
             if (!sched.exercises || sched.exercises.length === 0) {
-                listEl.innerHTML = '<p class="text-xs text-[#8E8E93] py-2">種目がありません。「＋ 種目追加」してください。</p>';
+                listEl.innerHTML = '<p class="text-xs text-[#8E8E93] py-2">種目がありません。「＋種目を追加」してください。</p>';
                 return;
             }
 
-            const categoryOptionsHtml = (selectedMuscle) => MUSCLE_CATEGORIES.map(cat =>
-                '<option value="' + cat + '"' + (selectedMuscle === cat ? ' selected' : '') + '>' + cat + '</option>'
-            ).join('');
-
             listEl.innerHTML = sched.exercises.map((ex, exIdx) => {
                 const thumb = getExerciseThumbnailHtml(ex.name, "w-8 h-8");
-                const currentCat = ex.muscle || (EXERCISE_IMAGE_MAP[ex.name]?.muscle) || '胸';
+                const boundCat = getBoundMuscleForExercise(ex);
+                ex.muscle = boundCat;
 
                 let detailInputsHtml = '';
                 if (isMinutesOnlyExercise(ex)) {
@@ -1889,7 +1869,7 @@
                         '<input type="number" min="1" value="' + (ex.minutes || 20) + '" onchange="updateManualMinutesOnly(' + exIdx + ', this.value)" class="w-16 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
                         '<span class="text-gray-500">分</span>' +
                         '</div>';
-                } else if (ex.type === 'cardio' || currentCat === '有酸素' || currentCat === '体幹') {
+                } else if (ex.type === 'cardio' || boundCat === '有酸素' || boundCat === '体幹') {
                     detailInputsHtml = '<div class="flex items-center gap-2 text-xs">' +
                         '<span class="text-gray-500">秒数:</span>' +
                         '<input type="number" value="' + (ex.sets?.[0]?.reps || 30) + '" onchange="updateManualCardio(' + exIdx + ', this.value)" class="w-20 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
@@ -1914,12 +1894,7 @@
                     'ontouchstart="handleSwipeStart(event, this)" ontouchmove="handleSwipeMove(event, this)" ontouchend="handleSwipeEnd(event, this)">' +
                     '<div class="flex items-center justify-between gap-2">' +
                     '<div class="flex items-center gap-2 min-w-0">' + thumb + '<span class="font-bold text-[#111827] truncate">' + ex.name + '</span></div>' +
-                    '<div class="flex items-center gap-1.5 shrink-0">' +
-                    '<select onchange="updateManualCategory(' + exIdx + ', this.value)" class="px-2 py-1 rounded-lg bg-white border border-[#E5E5EA] text-[11px] font-semibold text-[#111827]">' +
-                    categoryOptionsHtml(currentCat) +
-                    '</select>' +
-                    '<button type="button" onclick="deleteManualExercise(' + exIdx + ')" class="text-rose-600 font-semibold px-1 cursor-pointer">削除</button>' +
-                    '</div>' +
+                    '<span class="text-[11px] font-semibold text-[#6E6E73] shrink-0">' + boundCat + '</span>' +
                     '</div>' +
                     detailInputsHtml +
                     '</div>' +
@@ -1950,12 +1925,6 @@
                 el.style.transform = 'translateX(0px)';
             }
             swipeState.currentEl = null;
-        }
-
-        function updateManualCategory(exIdx, cat) {
-            const sched = getScheduleForDate(selectedDate);
-            sched.exercises[exIdx].muscle = cat;
-            saveAppData();
         }
 
         function updateManualMinutesOnly(exIdx, val) {
@@ -2038,6 +2007,7 @@
             const perExSec = Math.round((durationMins * 60) / exCount);
 
             (sched.exercises || []).forEach(ex => {
+                ex.muscle = getBoundMuscleForExercise(ex);
                 if (isMinutesOnlyExercise(ex)) {
                     ex.actualSeconds = (ex.minutes || durationMins) * 60;
                     ex.done = true;
@@ -2073,13 +2043,6 @@
             renderAll();
             alert('✓ 手動トレーニングデータを記録しました！');
         }
-
-        // ==========================================
-        // ホーム画面 グラフ（運動時間 / 体重、過去7日間 / 月間）
-        // ==========================================
-        let homeChartInstance = null, detailChartInstance = null;
-        let homeChartType = 'duration';
-        let homeChartRange = '7days';
 
         function setHomeChartType(type) {
             homeChartType = type;
@@ -2204,13 +2167,6 @@
             });
         }
 
-        // ==========================================
-        // 推移データタブ（期間選択・重量/運動時間・部位別集計）
-        // ==========================================
-        let analyticsMode = 'exercise';
-        let analyticsMetric = 'weight';
-        let dataPeriod = 'all';
-
         function setDataPeriod(period) {
             dataPeriod = period;
             ['all', 'month', 'week'].forEach(p => {
@@ -2221,18 +2177,105 @@
                         : 'px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
                 }
             });
+            populatePeriodNavigator();
+            renderDataTab();
+        }
+
+        function getAvailableMonthKeys() {
+            const set = new Set();
+            const curMonth = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0');
+            set.add(curMonth);
+            appData.workoutHistory.forEach(h => { if (h.date && h.date.length >= 7) set.add(h.date.slice(0, 7)); });
+            Object.keys(appData.weightLogs).forEach(d => { if (d && d.length >= 7) set.add(d.slice(0, 7)); });
+            Object.keys(appData.dateOverrides).forEach(d => { if (d && d.length >= 7) set.add(d.slice(0, 7)); });
+            return Array.from(set).sort((a, b) => b.localeCompare(a));
+        }
+
+        function getWeekStartDate(d) {
+            const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            copy.setDate(copy.getDate() - copy.getDay());
+            return copy;
+        }
+
+        function getAvailableWeekKeys() {
+            const map = new Map();
+            const addDateToWeeks = (dateStr) => {
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return;
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const ws = getWeekStartDate(d);
+                const key = formatDateKey(ws);
+                if (!map.has(key)) {
+                    const label = ws.getFullYear() + '年 ' + (ws.getMonth() + 1) + '月 (' + (ws.getMonth() + 1) + '/' + ws.getDate() + '週)';
+                    map.set(key, label);
+                }
+            };
+
+            addDateToWeeks(formatDateKey(selectedDate));
+            appData.workoutHistory.forEach(h => { if (h.date) addDateToWeeks(h.date); });
+            Object.keys(appData.weightLogs).forEach(d => addDateToWeeks(d));
+            Object.keys(appData.dateOverrides).forEach(d => addDateToWeeks(d));
+
+            return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+        }
+
+        function populatePeriodNavigator() {
+            const monthNav = document.getElementById('data-month-nav');
+            const weekNav = document.getElementById('data-week-nav');
+            const monthSelect = document.getElementById('data-month-select');
+            const weekSelect = document.getElementById('data-week-select');
+
+            if (monthNav) monthNav.classList.add('hidden');
+            if (weekNav) weekNav.classList.add('hidden');
+
+            if (dataPeriod === 'month') {
+                const months = getAvailableMonthKeys();
+                if (!selectedDataMonthKey || !months.includes(selectedDataMonthKey)) {
+                    selectedDataMonthKey = months[0];
+                }
+                monthSelect.innerHTML = months.map(ym => {
+                    const [yr, mo] = ym.split('-');
+                    return '<option value="' + ym + '"' + (ym === selectedDataMonthKey ? ' selected' : '') + '>' + yr + '年 ' + Number(mo) + '月</option>';
+                }).join('');
+                monthNav.classList.remove('hidden');
+            } else if (dataPeriod === 'week') {
+                const weeks = getAvailableWeekKeys();
+                if (!selectedDataWeekKey || !weeks.some(w => w[0] === selectedDataWeekKey)) {
+                    selectedDataWeekKey = weeks[0]?.[0] || formatDateKey(getWeekStartDate(selectedDate));
+                }
+                weekSelect.innerHTML = weeks.map(([wkKey, label]) =>
+                    '<option value="' + wkKey + '"' + (wkKey === selectedDataWeekKey ? ' selected' : '') + '>' + label + '</option>'
+                ).join('');
+                weekNav.classList.remove('hidden');
+            }
+        }
+
+        function onDataMonthSelect(ym) {
+            selectedDataMonthKey = ym;
+            renderDataTab();
+        }
+
+        function onDataWeekSelect(wkKey) {
+            selectedDataWeekKey = wkKey;
             renderDataTab();
         }
 
         function isDateWithinPeriod(dateStr) {
             if (dataPeriod === 'all') return true;
-            const parts = dateStr.split('-');
-            if (parts.length !== 3) return true;
-            const targetTime = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
-            const baseEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()).getTime();
-            const days = dataPeriod === 'week' ? 7 : 30;
-            const startTime = baseEnd - (days - 1) * 86400000;
-            return targetTime >= startTime && targetTime <= baseEnd;
+            if (dataPeriod === 'month') {
+                return dateStr.startsWith(selectedDataMonthKey || '');
+            }
+            if (dataPeriod === 'week') {
+                const parts = (selectedDataWeekKey || '').split('-');
+                if (parts.length !== 3) return true;
+                const startD = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const endD = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate() + 6);
+                const tParts = dateStr.split('-');
+                if (tParts.length !== 3) return false;
+                const targetD = new Date(Number(tParts[0]), Number(tParts[1]) - 1, Number(tParts[2]));
+                return targetD >= startD && targetD <= endD;
+            }
+            return true;
         }
 
         function getFilteredWorkoutHistory() {
@@ -2275,6 +2318,7 @@
         }
 
         function renderDataTab() {
+            populatePeriodNavigator();
             const filteredLogs = getFilteredWorkoutHistory();
             let sumVol = 0, sumSec = 0;
             filteredLogs.forEach(h => {
@@ -2309,7 +2353,7 @@
                 const exList = h.exercises || [];
                 const totalExCount = exList.length || 1;
                 exList.forEach(ex => {
-                    const cat = ex.muscle || EXERCISE_IMAGE_MAP[ex.name]?.muscle || 'その他';
+                    const cat = getBoundMuscleForExercise(ex);
                     if (!stats[cat]) stats[cat] = { volume: 0, seconds: 0 };
                     let exVol = 0;
                     if (ex.sets) {
@@ -2384,7 +2428,7 @@
                 const exList = h.exercises || [];
                 const matched = exList.filter(e => {
                     if (analyticsMode === 'exercise') return e.name === target;
-                    const cat = e.muscle || EXERCISE_IMAGE_MAP[e.name]?.muscle;
+                    const cat = getBoundMuscleForExercise(e);
                     return cat === target;
                 });
 
@@ -2436,10 +2480,7 @@
             });
         }
 
-        // ==========================================
-        // モーダル①：スケジュール編集
-        // ==========================================
-        function openScheduleModal(fromPreWorkout = false) {
+        function openScheduleModal() {
             const sched = getScheduleForDate(selectedDate);
             document.getElementById('schedule-modal-title').textContent = (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日のメニュー編集';
             document.getElementById('sched-title-input').value = sched.title;
@@ -2478,13 +2519,8 @@
             renderAll();
         }
 
-        // ==========================================
-        // モーダル②：種目追加（セット数・重量・回数・分対応）
-        // ==========================================
-        let currentFilterMuscle = 'すべて';
-        let currentSearchQuery = '';
-
-        function openAddExerciseModal() {
+        function openAddExerciseModal(fromWorkoutPreview = false) {
+            isAddingFromWorkoutPreview = !!fromWorkoutPreview;
             currentFilterMuscle = 'すべて';
             currentSearchQuery = '';
             document.getElementById('exercise-search-input').value = '';
@@ -2583,13 +2619,16 @@
             }
         }
 
-        function closeAddExerciseModal() { document.getElementById('add-exercise-modal').classList.add('modal-hidden'); }
+        function closeAddExerciseModal() {
+            document.getElementById('add-exercise-modal').classList.add('modal-hidden');
+            isAddingFromWorkoutPreview = false;
+        }
 
         function handleCreateExercise(e) {
             e.preventDefault();
             const name = document.getElementById('new-ex-name').value.trim();
-            const muscle = document.getElementById('new-ex-muscle').value;
-            const type = document.getElementById('new-ex-type').value;
+            const muscle = EXERCISE_IMAGE_MAP[name]?.muscle || document.getElementById('new-ex-muscle').value;
+            const type = EXERCISE_IMAGE_MAP[name]?.type || document.getElementById('new-ex-type').value;
             if (!name) { alert('種目を選択してください'); return; }
 
             const sched = getScheduleForDate(selectedDate);
@@ -2634,9 +2673,13 @@
                 });
             }
 
+            const backToPreview = isAddingFromWorkoutPreview;
             saveAppData();
             closeAddExerciseModal();
             renderAll();
+            if (backToPreview) {
+                renderPreWorkoutList();
+            }
         }
 
         function renderAll() {
