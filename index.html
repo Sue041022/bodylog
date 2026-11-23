@@ -252,7 +252,8 @@
                         <div class="flex items-center justify-between mb-2.5">
                             <div>
                                 <h3 id="weight-card-date-label" class="text-xs font-semibold text-[#6E6E73]">体重記録</h3>
-                                <p id="weight-diff-label" class="text-[11px] text-[#8E8E93] mt-0.5">前回比: --</p>
+                                <p id="weight-diff-label" class="text-[11px] text-[#8E8E93] mt-0.5 tabular-nums">前回比: --
+                                </p>
                             </div>
                             <span id="weight-saved-indicator"
                                 class="text-[11px] font-semibold text-[#007AFF] opacity-0 transition-opacity">保存しました</span>
@@ -286,7 +287,7 @@
                     </div>
                 </div>
 
-                <!-- ③ 本日のメニュー / 完了したワークカード（種目カード内包） -->
+                <!-- ③ 本日のメニュー / 完了したワークカード -->
                 <div class="order-2 lg:order-1 lg:col-span-7 space-y-4">
                     <div class="ios-card p-4 sm:p-5">
                         <div class="flex items-start justify-between gap-3 mb-4">
@@ -295,12 +296,8 @@
                                     <h2 id="workout-card-heading" class="text-base sm:text-lg font-bold text-[#111827]">
                                         本日のメニュー
                                     </h2>
-                                    <span id="schedule-type-badge"
-                                        class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF5FF] text-[#007AFF]">
-                                        筋トレ
-                                    </span>
                                 </div>
-                                <p id="schedule-subtitle" class="text-xs text-[#6E6E73]">胸・背中・肩を重点的に</p>
+                                <p id="schedule-subtitle" class="text-xs text-[#6E6E73]">胸・肩</p>
                             </div>
                             <button id="btn-change-schedule" onclick="openScheduleModal()"
                                 class="shrink-0 text-xs font-semibold text-[#007AFF] hover:opacity-80 px-2.5 py-1.5 rounded-lg bg-[#F2F2F7] transition-opacity cursor-pointer">
@@ -327,7 +324,7 @@
                             <div>
                                 <span class="text-[11px] text-[#8E8E93] block">種目数</span>
                                 <span id="exercise-count-display"
-                                    class="font-bold text-[#111827] text-sm sm:text-base tabular-nums">6種目</span>
+                                    class="font-bold text-[#111827] text-sm sm:text-base tabular-nums">4種目</span>
                             </div>
                         </div>
 
@@ -535,7 +532,7 @@
                 </button>
                 <div class="text-center">
                     <span class="text-[11px] font-semibold text-[#8E8E93] block">本日のワーク内容</span>
-                    <h2 id="wo-preview-title" class="text-base font-bold text-[#111827]">上半身B</h2>
+                    <h2 id="wo-preview-title" class="text-base font-bold text-[#111827]">胸・肩</h2>
                 </div>
                 <div class="w-9 h-9"></div>
             </div>
@@ -570,7 +567,7 @@
             <div class="flex items-center justify-between">
                 <span id="wo-ready-progress"
                     class="text-xs font-semibold px-3 py-1 rounded-lg bg-white border border-[#E5E5EA] text-[#6E6E73] tabular-nums">
-                    種目 1 / 6
+                    種目 1 / 4
                 </span>
                 <button onclick="abortWorkoutSession()"
                     class="text-xs font-semibold text-[#8E8E93] hover:text-rose-600 px-3 py-1.5 cursor-pointer">
@@ -601,7 +598,7 @@
             </div>
         </div>
 
-        <!-- STEP 3: セット実行中 -->
+        <!-- STEP 3: セット実行中（その場で重量・回数を変更可能） -->
         <div id="wo-step-active" class="hidden flex-1 bg-[#111827] text-white flex flex-col justify-between px-6 py-8">
             <div class="text-center pt-2">
                 <p id="wo-active-set-badge"
@@ -612,8 +609,23 @@
                     チェストプレス
                 </h2>
                 <p id="wo-active-target" class="text-base font-medium text-neutral-400 mt-1.5 tabular-nums">
-                    40kg × 10〜12回
+                    40kg × 10回
                 </p>
+
+                <!-- ワーク中の重量・回数リアルタイム調整欄 -->
+                <div id="wo-active-adjust-box"
+                    class="mt-4 inline-flex items-center justify-center gap-2 bg-white/10 px-3.5 py-2 rounded-xl text-xs">
+                    <span class="text-neutral-300">重量:</span>
+                    <input type="number" step="0.5" id="wo-live-weight-input"
+                        onchange="onLiveSetAdjust('weight', this.value)"
+                        class="w-16 text-center py-1 rounded-lg bg-[#1F2937] border border-white/15 text-white font-bold text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-[#60A5FA]" />
+                    <span class="text-neutral-400">kg</span>
+                    <span class="text-neutral-500 mx-1">×</span>
+                    <span class="text-neutral-300">回数:</span>
+                    <input type="number" id="wo-live-reps-input" onchange="onLiveSetAdjust('reps', this.value)"
+                        class="w-14 text-center py-1 rounded-lg bg-[#1F2937] border border-white/15 text-white font-bold text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-[#60A5FA]" />
+                    <span class="text-neutral-400">回</span>
+                </div>
             </div>
 
             <div class="my-auto text-center">
@@ -707,7 +719,7 @@
 
             <form onsubmit="handleSaveSchedule(event)" class="space-y-4 border-t border-[#E5E5EA] pt-4">
                 <div>
-                    <label class="block text-xs font-semibold text-[#6E6E73] mb-1">タイトル（トレーニング名）</label>
+                    <label class="block text-xs font-semibold text-[#6E6E73] mb-1">トレーニング名</label>
                     <input type="text" id="sched-title-input" required
                         class="w-full px-3.5 py-2.5 rounded-xl bg-[#F2F2F7] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#007AFF] focus:bg-white" />
                 </div>
@@ -912,10 +924,11 @@
        JavaScript
   =========================================== -->
     <script>
-        const STORAGE_KEY = 'bodylog_custom_v16';
-        const CURRENT_SCHEMA_VERSION = 21;
+        const STORAGE_KEY = 'bodylog_custom_v17';
+        const CURRENT_SCHEMA_VERSION = 22;
         const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
         const MUSCLE_CATEGORIES = ['胸', '背中', '肩', '腕', '脚', 'お尻', '体幹', '有酸素'];
+        const IMAGE_FOLDER_PREFIX = '筋トレ_イメージ画像/';
 
         const weightPointLabelPlugin = {
             id: 'weightPointLabelPlugin',
@@ -944,31 +957,94 @@
             Chart.register(weightPointLabelPlugin);
         }
 
+        // 画像フォルダ（筋トレ_イメージ画像/）のファイル名を基準に統合した種目マップ
         const EXERCISE_IMAGE_MAP = {
-            "インクラインダンベルプレス": { file: "インクラインダンベルプレス.png", muscle: "胸", type: "strength" },
-            "カーフレイズ": { file: "カーフレイズ.png", muscle: "脚", type: "strength" },
-            "サイドプランク": { file: "サイドプランク.png", muscle: "体幹", type: "cardio" },
-            "サイドレイズ": { file: "サイドレイズ.png", muscle: "肩", type: "strength" },
-            "ラテラルレイズ": { file: "サイドレイズ.png", muscle: "肩", type: "strength" },
-            "ショルダープレス": { file: "インクラインダンベルプレス.png", muscle: "肩", type: "strength" },
-            "シーテッドロー": { file: "シーテッドロー.png", muscle: "背中", type: "strength" },
-            "ストレッチ": { file: "ストレッチ.png", muscle: "体幹", type: "cardio" },
-            "ダンベルカール": { file: "ダンベルカール.png", muscle: "腕", type: "strength" },
-            "チェストプレス": { file: "チェストプレス.png", muscle: "胸", type: "strength" },
-            "デッドバグ": { file: "デッドバグ.png", muscle: "体幹", type: "strength" },
-            "トライセプスプレスダウン": { file: "トライセプスプレスダウン.png", muscle: "腕", type: "strength" },
-            "ヒップスラスト": { file: "ヒップスラスト.png", muscle: "お尻", type: "strength" },
-            "プランク": { file: "プランク.png", muscle: "体幹", type: "cardio" },
-            "ブルガリアンスクワット": { file: "ブルガリアンスクワット.png", muscle: "脚", type: "strength" },
-            "ペックフライ": { file: "ペックフライ.png", muscle: "胸", type: "strength" },
-            "ラットプルダウン": { file: "ラットプルダウン.png", muscle: "背中", type: "strength" },
-            "リアデルトフライ": { file: "リアデルトフライ.png", muscle: "肩", type: "strength" },
-            "ルーマニアンデッドリフト": { file: "ルーマニアンデッドリフト.png", muscle: "お尻", type: "strength" },
-            "レッグエクステンション": { file: "レッグエクステンション.png", muscle: "脚", type: "strength" },
-            "レッグカール": { file: "レッグカール.png", muscle: "脚", type: "strength" },
-            "レッグプレス": { file: "レッグプレス.png", muscle: "脚", type: "strength" },
-            "傾斜ウォーキング": { file: "傾斜ウォーキング.png", muscle: "有酸素", type: "cardio" },
-            "ランニング": { file: "ランニング.png", muscle: "有酸素", type: "cardio" }
+            "アシスト・ディップ": { file: "アシスト・ディップ.png", muscle: "背中", subMuscles: ["腕"], type: "strength" },
+            "インクラインダンベルプレス": { file: "インクラインダンベルプレス.png", muscle: "胸", subMuscles: ["肩", "腕"], type: "strength" },
+            "カーフレイズ": { file: "カーフレイズ.png", muscle: "脚", subMuscles: [], type: "strength" },
+            "カープレイズ": { file: "カープレイズ.png", muscle: "脚", subMuscles: [], type: "strength" },
+            "ケーブル・ハンマーカール": { file: "ケーブル・ハンマーカール.png", muscle: "腕", subMuscles: [], type: "strength" },
+            "ケーブルカール": { file: "ケーブルカール.png", muscle: "腕", subMuscles: [], type: "strength" },
+            "サイドプランク": { file: "サイドプランク.png", muscle: "体幹", subMuscles: [], type: "cardio" },
+            "サイドレイズ": { file: "サイドレイズ.png", muscle: "肩", subMuscles: [], type: "strength" },
+            "シーテッドロー": { file: "シーテッドロー.png", muscle: "背中", subMuscles: ["腕"], type: "strength" },
+            "ショルダープレス": { file: "ショルダープレス.png", muscle: "肩", subMuscles: ["腕"], type: "strength" },
+            "スーパースミス": { file: "スーパースミス.png", muscle: "脚", subMuscles: ["お尻"], type: "strength" },
+            "スクワット": { file: "スクワット.png", muscle: "脚", subMuscles: ["お尻"], type: "strength" },
+            "ストレッチ": { file: "ストレッチ.png", muscle: "体幹", subMuscles: [], type: "cardio" },
+            "ダンベルカール": { file: "ダンベルカール.png", muscle: "腕", subMuscles: [], type: "strength" },
+            "チェストプレス": { file: "チェストプレス.png", muscle: "胸", subMuscles: ["肩", "腕"], type: "strength" },
+            "デッドバグ": { file: "デッドバグ.png", muscle: "体幹", subMuscles: [], type: "strength" },
+            "トライセプスプレスダウン": { file: "トライセプスプレスダウン.png", muscle: "腕", subMuscles: [], type: "strength" },
+            "バイセップスカール": { file: "バイセップスカール.png", muscle: "腕", subMuscles: [], type: "strength" },
+            "ヒップスラスト": { file: "ヒップスラスト.png", muscle: "お尻", subMuscles: ["脚"], type: "strength" },
+            "プランク": { file: "プランク.png", muscle: "体幹", subMuscles: [], type: "cardio" },
+            "ブルガリアンスクワット": { file: "ブルガリアンスクワット.png", muscle: "脚", subMuscles: ["お尻"], type: "strength" },
+            "ペックフライ": { file: "ペックフライ.png", muscle: "胸", subMuscles: [], type: "strength" },
+            "ラットプルダウン": { file: "ラットプルダウン.png", muscle: "背中", subMuscles: ["腕"], type: "strength" },
+            "ラテラルレイズ": { file: "ラテラルレイズ.png", muscle: "肩", subMuscles: [], type: "strength" },
+            "ルーマニアンデッドリフト": { file: "ルーマニアンデッドリフト.png", muscle: "お尻", subMuscles: ["脚"], type: "strength" },
+            "レッグエクステンション": { file: "レッグエクステンション.png", muscle: "脚", subMuscles: [], type: "strength" },
+            "レッグカール": { file: "レッグカール.png", muscle: "脚", subMuscles: [], type: "strength" },
+            "レッグプレス": { file: "レッグプレス.png", muscle: "脚", subMuscles: ["お尻"], type: "strength" },
+            "傾斜ウォーキング": { file: "傾斜ウォーキング.png", muscle: "有酸素", subMuscles: [], type: "cardio" },
+            "ランニング": { file: "ランニング.png", muscle: "有酸素", subMuscles: [], type: "cardio" }
+        };
+
+        // 0:日, 1:月, 2:火, 3:水, 4:木, 5:金, 6:土
+        const DEFAULT_WEEKLY_TEMPLATES = {
+            1: {
+                title: '胸・肩', badge: '筋トレ', subtitle: '胸・肩', memo: '',
+                exercises: [
+                    { id: 'mon-1', name: 'チェストプレス', muscle: '胸', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }] },
+                    { id: 'mon-2', name: 'ペックフライ', muscle: '胸', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }] },
+                    { id: 'mon-3', name: 'ショルダープレス', muscle: '肩', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 20, reps: 10, done: false }, { weight: 20, reps: 10, done: false }, { weight: 20, reps: 10, done: false }] },
+                    { id: 'mon-4', name: 'ラテラルレイズ', muscle: '肩', type: 'strength', targetReps: '15', restSeconds: 60, note: '', sets: [{ weight: 8, reps: 15, done: false }, { weight: 8, reps: 15, done: false }, { weight: 8, reps: 15, done: false }] }
+                ]
+            },
+            2: { title: '休み', badge: '休養日', subtitle: '休養', memo: '', exercises: [] },
+            3: {
+                title: '背中・腕', badge: '筋トレ', subtitle: '背中・腕', memo: '',
+                exercises: [
+                    { id: 'wed-1', name: 'アシスト・ディップ', muscle: '背中', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 0, reps: 10, done: false }, { weight: 0, reps: 10, done: false }, { weight: 0, reps: 10, done: false }] },
+                    { id: 'wed-2', name: 'ラットプルダウン', muscle: '背中', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 45, reps: 10, done: false }, { weight: 45, reps: 10, done: false }, { weight: 45, reps: 10, done: false }] },
+                    { id: 'wed-3', name: 'シーテッドロー', muscle: '背中', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }] },
+                    { id: 'wed-4', name: 'バイセップスカール', muscle: '腕', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 10, reps: 12, done: false }, { weight: 10, reps: 12, done: false }, { weight: 10, reps: 12, done: false }] },
+                    { id: 'wed-5', name: 'ケーブルカール', muscle: '腕', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 20, reps: 12, done: false }, { weight: 20, reps: 12, done: false }, { weight: 20, reps: 12, done: false }] },
+                    { id: 'wed-6', name: 'ケーブル・ハンマーカール', muscle: '腕', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 18, reps: 12, done: false }, { weight: 18, reps: 12, done: false }, { weight: 18, reps: 12, done: false }] }
+                ]
+            },
+            4: {
+                title: '胸・肩', badge: '筋トレ', subtitle: '胸・肩', memo: '',
+                exercises: [
+                    { id: 'thu-1', name: 'チェストプレス', muscle: '胸', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }] },
+                    { id: 'thu-2', name: 'ペックフライ', muscle: '胸', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }] },
+                    { id: 'thu-3', name: 'ショルダープレス', muscle: '肩', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 20, reps: 10, done: false }, { weight: 20, reps: 10, done: false }, { weight: 20, reps: 10, done: false }] },
+                    { id: 'thu-4', name: 'ラテラルレイズ', muscle: '肩', type: 'strength', targetReps: '15', restSeconds: 60, note: '', sets: [{ weight: 8, reps: 15, done: false }, { weight: 8, reps: 15, done: false }, { weight: 8, reps: 15, done: false }] }
+                ]
+            },
+            5: { title: '休み', badge: '休養日', subtitle: '休養', memo: '', exercises: [] },
+            6: {
+                title: '背中・腕', badge: '筋トレ', subtitle: '背中・腕', memo: '',
+                exercises: [
+                    { id: 'sat-1', name: 'アシスト・ディップ', muscle: '背中', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 0, reps: 10, done: false }, { weight: 0, reps: 10, done: false }, { weight: 0, reps: 10, done: false }] },
+                    { id: 'sat-2', name: 'ラットプルダウン', muscle: '背中', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 45, reps: 10, done: false }, { weight: 45, reps: 10, done: false }, { weight: 45, reps: 10, done: false }] },
+                    { id: 'sat-3', name: 'シーテッドロー', muscle: '背中', type: 'strength', targetReps: '10', restSeconds: 90, note: '', sets: [{ weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }, { weight: 40, reps: 10, done: false }] },
+                    { id: 'sat-4', name: 'バイセップスカール', muscle: '腕', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 10, reps: 12, done: false }, { weight: 10, reps: 12, done: false }, { weight: 10, reps: 12, done: false }] },
+                    { id: 'sat-5', name: 'ケーブルカール', muscle: '腕', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 20, reps: 12, done: false }, { weight: 20, reps: 12, done: false }, { weight: 20, reps: 12, done: false }] },
+                    { id: 'sat-6', name: 'ケーブル・ハンマーカール', muscle: '腕', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 18, reps: 12, done: false }, { weight: 18, reps: 12, done: false }, { weight: 18, reps: 12, done: false }] }
+                ]
+            },
+            0: {
+                title: '脚', badge: '筋トレ', subtitle: '脚', memo: '',
+                exercises: [
+                    { id: 'sun-1', name: 'スーパースミス', muscle: '脚', type: 'strength', targetReps: '10', restSeconds: 120, note: '', sets: [{ weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }] },
+                    { id: 'sun-2', name: 'カープレイズ', muscle: '脚', type: 'strength', targetReps: '15', restSeconds: 60, note: '', sets: [{ weight: 40, reps: 15, done: false }, { weight: 40, reps: 15, done: false }, { weight: 40, reps: 15, done: false }] },
+                    { id: 'sun-3', name: 'レッグカール', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 90, note: '', sets: [{ weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }] },
+                    { id: 'sun-4', name: 'スクワット', muscle: '脚', type: 'strength', targetReps: '10', restSeconds: 120, note: '', sets: [{ weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }] },
+                    { id: 'sun-5', name: 'レッグエクステンション', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }, { weight: 35, reps: 12, done: false }] }
+                ]
+            }
         };
 
         function getBoundMuscleForExercise(ex) {
@@ -986,9 +1062,10 @@
 
         function getExerciseThumbnailHtml(exName, extraClass = "w-12 h-12") {
             const info = EXERCISE_IMAGE_MAP[exName];
-            const fileName = info ? info.file.normalize('NFD') : null;
-            if (fileName) {
-                return '<img src="' + fileName + '" alt="' + exName + '" loading="lazy" decoding="async" class="' + extraClass + ' rounded-xl object-cover border border-[#E5E5EA] bg-white shrink-0" onerror="this.replaceWith(createFallbackElement(\'' + exName + '\', \'' + extraClass + '\'));">';
+            const rawPath = info ? (IMAGE_FOLDER_PREFIX + info.file) : null;
+            const filePath = rawPath ? rawPath.normalize('NFD') : null;
+            if (filePath) {
+                return '<img src="' + filePath + '" alt="' + exName + '" loading="lazy" decoding="async" class="' + extraClass + ' rounded-xl object-cover border border-[#E5E5EA] bg-white shrink-0" onerror="this.replaceWith(createFallbackElement(\'' + exName + '\', \'' + extraClass + '\'));">';
             }
             return createFallbackElement(exName, extraClass).outerHTML;
         }
@@ -1000,70 +1077,21 @@
             return div;
         }
 
-        const DEFAULT_WEEKLY_TEMPLATES = {
-            0: {
-                title: '下半身B', badge: '筋トレ', subtitle: '脚・お尻・体幹', memo: '',
-                exercises: [
-                    { id: 'sun-1', name: 'ブルガリアンスクワット', muscle: '脚', type: 'strength', targetReps: '20', restSeconds: 90, note: '', sets: [{ weight: 10, reps: 20, done: false }, { weight: 12, reps: 20, done: false }] },
-                    { id: 'sun-2', name: 'ヒップスラスト', muscle: 'お尻', type: 'strength', targetReps: '10〜12', restSeconds: 90, note: '', sets: [{ weight: 60, reps: 12, done: false }, { weight: 70, reps: 10, done: false }] },
-                    { id: 'sun-3', name: 'レッグエクステンション', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 35, reps: 12, done: false }, { weight: 40, reps: 12, done: false }] },
-                    { id: 'sun-4', name: 'レッグカール', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 60, note: '', sets: [{ weight: 35, reps: 12, done: false }, { weight: 40, reps: 12, done: false }] },
-                    { id: 'sun-5', name: 'カーフレイズ', muscle: '脚', type: 'strength', targetReps: '15', restSeconds: 60, note: '', sets: [{ weight: 40, reps: 15, done: false }, { weight: 40, reps: 15, done: false }] },
-                    { id: 'sun-6', name: 'プランク', muscle: '体幹', type: 'cardio', duration: '30〜45秒 × 2', restSeconds: 45, note: '', done: false }
-                ]
-            },
-            1: { title: '完全休養', badge: '休養日', subtitle: '筋肉・身体全体の回復', memo: '', exercises: [] },
-            2: {
-                title: '上半身A', badge: '筋トレ', subtitle: '胸・背中・肩・腕', memo: '',
-                exercises: [
-                    { id: 'tue-1', name: 'チェストプレス', muscle: '胸', type: 'strength', targetReps: '10〜12', restSeconds: 90, note: '', sets: [{ weight: 40, reps: 12, done: false }, { weight: 45, reps: 10, done: false }, { weight: 45, reps: 10, done: false }] },
-                    { id: 'tue-2', name: 'ラットプルダウン', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, note: '', sets: [{ weight: 45, reps: 12, done: false }, { weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }] },
-                    { id: 'tue-3', name: 'シーテッドロー', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, note: '', sets: [{ weight: 40, reps: 12, done: false }, { weight: 45, reps: 10, done: false }] },
-                    { id: 'tue-4', name: 'サイドレイズ', muscle: '肩', type: 'strength', targetReps: '12〜15', restSeconds: 60, note: '', sets: [{ weight: 7, reps: 15, done: false }, { weight: 8, reps: 12, done: false }] },
-                    { id: 'tue-5', name: 'ダンベルカール', muscle: '腕', type: 'strength', targetReps: '10〜12', restSeconds: 60, note: '', sets: [{ weight: 10, reps: 12, done: false }, { weight: 10, reps: 10, done: false }] },
-                    { id: 'tue-6', name: 'トライセプスプレスダウン', muscle: '腕', type: 'strength', targetReps: '10〜12', restSeconds: 60, note: '', sets: [{ weight: 20, reps: 12, done: false }, { weight: 25, reps: 10, done: false }] }
-                ]
-            },
-            3: {
-                title: '下半身A', badge: '筋トレ', subtitle: '太もも・お尻・体幹', memo: '',
-                exercises: [
-                    { id: 'wed-1', name: 'レッグプレス', muscle: '脚', type: 'strength', targetReps: '10〜12', restSeconds: 120, note: '', sets: [{ weight: 100, reps: 12, done: false }, { weight: 120, reps: 10, done: false }, { weight: 120, reps: 10, done: false }] },
-                    { id: 'wed-2', name: 'ルーマニアンデッドリフト', muscle: 'お尻', type: 'strength', targetReps: '10', restSeconds: 120, note: '', sets: [{ weight: 50, reps: 10, done: false }, { weight: 60, reps: 10, done: false }] },
-                    { id: 'wed-3', name: 'レッグカール', muscle: '脚', type: 'strength', targetReps: '12', restSeconds: 90, note: '', sets: [{ weight: 35, reps: 12, done: false }, { weight: 40, reps: 12, done: false }] },
-                    { id: 'wed-4', name: 'カーフレイズ', muscle: '脚', type: 'strength', targetReps: '15', restSeconds: 60, note: '', sets: [{ weight: 40, reps: 15, done: false }, { weight: 40, reps: 15, done: false }] },
-                    { id: 'wed-5', name: 'デッドバグ', muscle: '体幹', type: 'strength', targetReps: '20', restSeconds: 60, note: '', sets: [{ weight: 0, reps: 20, done: false }, { weight: 0, reps: 20, done: false }] }
-                ]
-            },
-            4: {
-                title: '有酸素＋体幹', badge: '軽めの日', subtitle: 'ウォーキング・腹部', memo: '',
-                exercises: [
-                    { id: 'thu-1', name: '傾斜ウォーキング', muscle: '有酸素', type: 'cardio', minutes: 25, duration: '25分', restSeconds: 60, note: '', done: false },
-                    { id: 'thu-2', name: 'プランク', muscle: '体幹', type: 'cardio', duration: '30〜45秒 × 2', restSeconds: 45, note: '', done: false },
-                    { id: 'thu-3', name: 'サイドプランク', muscle: '体幹', type: 'cardio', duration: '左右20〜30秒 × 2', restSeconds: 45, note: '', done: false },
-                    { id: 'thu-4', name: 'ストレッチ', muscle: '体幹', type: 'cardio', duration: '5〜10分', restSeconds: 30, note: '', done: false }
-                ]
-            },
-            5: { title: '完全休養', badge: '休養日', subtitle: '土日のトレーニングに備える', memo: '', exercises: [] },
-            6: {
-                title: '上半身B', badge: '筋トレ', subtitle: '胸・背中・肩を重点的に', memo: '',
-                exercises: [
-                    { id: 'sat-1', name: 'ラットプルダウン', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, note: '', sets: [{ weight: 45, reps: 12, done: false }, { weight: 50, reps: 10, done: false }, { weight: 50, reps: 10, done: false }] },
-                    { id: 'sat-2', name: 'インクラインダンベルプレス', muscle: '胸', type: 'strength', targetReps: '10〜12', restSeconds: 90, note: '', sets: [{ weight: 16, reps: 12, done: false }, { weight: 18, reps: 10, done: false }, { weight: 18, reps: 10, done: false }] },
-                    { id: 'sat-3', name: 'シーテッドロー', muscle: '背中', type: 'strength', targetReps: '10〜12', restSeconds: 90, note: '', sets: [{ weight: 40, reps: 12, done: false }, { weight: 45, reps: 10, done: false }] },
-                    { id: 'sat-4', name: 'サイドレイズ', muscle: '肩', type: 'strength', targetReps: '12〜15', restSeconds: 60, note: '', sets: [{ weight: 7, reps: 15, done: false }, { weight: 8, reps: 12, done: false }] },
-                    { id: 'sat-5', name: 'リアデルトフライ', muscle: '肩', type: 'strength', targetReps: '12〜15', restSeconds: 60, note: '', sets: [{ weight: 25, reps: 15, done: false }, { weight: 30, reps: 12, done: false }] },
-                    { id: 'sat-6', name: 'ペックフライ', muscle: '胸', type: 'strength', targetReps: '12〜15', restSeconds: 60, note: '', sets: [{ weight: 35, reps: 15, done: false }, { weight: 40, reps: 12, done: false }] }
-                ]
-            }
-        };
-
         function migrateAndNormalizeData(raw) {
-            const base = { schemaVersion: CURRENT_SCHEMA_VERSION, weeklyTemplates: JSON.parse(JSON.stringify(DEFAULT_WEEKLY_TEMPLATES)), dateOverrides: {}, workoutHistory: [], weightLogs: {} };
+            const base = {
+                schemaVersion: CURRENT_SCHEMA_VERSION,
+                weeklyTemplates: JSON.parse(JSON.stringify(DEFAULT_WEEKLY_TEMPLATES)),
+                dateOverrides: {},
+                workoutHistory: [],
+                weightLogs: {}
+            };
             if (!raw || typeof raw !== 'object') return base;
             if (raw.weeklyTemplates) base.weeklyTemplates = raw.weeklyTemplates;
             if (raw.dateOverrides) base.dateOverrides = raw.dateOverrides;
             if (raw.weightLogs) base.weightLogs = raw.weightLogs;
-            if (Array.isArray(raw.workoutHistory)) base.workoutHistory = raw.workoutHistory.filter(h => !h.isSample);
+            if (Array.isArray(raw.workoutHistory)) {
+                base.workoutHistory = raw.workoutHistory.filter(h => !h.isSample);
+            }
             return base;
         }
 
@@ -1122,7 +1150,8 @@
         function getScheduleForDate(d) {
             const key = formatDateKey(d);
             if (!appData.dateOverrides[key]) {
-                appData.dateOverrides[key] = JSON.parse(JSON.stringify(appData.weeklyTemplates[d.getDay()]));
+                const tpl = appData.weeklyTemplates[d.getDay()] || { title: '休み', badge: '休養日', subtitle: '休養', memo: '', exercises: [] };
+                appData.dateOverrides[key] = JSON.parse(JSON.stringify(tpl));
                 saveAppData();
             }
             return appData.dateOverrides[key];
@@ -1227,6 +1256,21 @@
             const savedVal = appData.weightLogs[dateKey];
             document.getElementById('weight-card-date-label').textContent = (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日の体重';
 
+            // 前回比の計算（選択日以前で最も近い記録日と比較）
+            const diffEl = document.getElementById('weight-diff-label');
+            if (diffEl) {
+                const prevEntries = Object.entries(appData.weightLogs)
+                    .filter(([k, v]) => k < dateKey && v !== undefined && v !== null && !isNaN(Number(v)))
+                    .sort((a, b) => b[0].localeCompare(a[0]));
+                if (savedVal !== undefined && savedVal !== null && !isNaN(Number(savedVal)) && prevEntries.length > 0) {
+                    const diff = Number(savedVal) - Number(prevEntries[0][1]);
+                    const sign = diff > 0 ? '+' : '';
+                    diffEl.textContent = '前回比: ' + sign + diff.toFixed(1) + ' kg';
+                } else {
+                    diffEl.textContent = '前回比: --';
+                }
+            }
+
             const confirmedView = document.getElementById('weight-confirmed-view');
             const editView = document.getElementById('weight-edit-view');
             const inputEl = document.getElementById('daily-weight-input');
@@ -1304,6 +1348,44 @@
             renderWorkoutSection();
         }
 
+        function updateHomeExerciseSetField(exIdx, setIdx, field, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[exIdx];
+            if (ex && ex.sets && ex.sets[setIdx]) {
+                ex.sets[setIdx][field] = parseFloat(val) || 0;
+                saveAppData();
+                renderWorkoutSection();
+            }
+        }
+
+        function updateHomeExerciseSetCount(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[exIdx];
+            if (!ex || !ex.sets) return;
+            const newCount = Math.max(1, Math.min(15, parseInt(val, 10) || 1));
+            const lastSet = ex.sets[ex.sets.length - 1] || { weight: 20, reps: 10, done: false };
+            if (newCount > ex.sets.length) {
+                while (ex.sets.length < newCount) {
+                    ex.sets.push({ weight: lastSet.weight, reps: lastSet.reps, done: false });
+                }
+            } else if (newCount < ex.sets.length) {
+                ex.sets.length = newCount;
+            }
+            saveAppData();
+            renderWorkoutSection();
+        }
+
+        function updateHomeExerciseMinutes(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[exIdx];
+            if (!ex) return;
+            const mins = Math.max(1, parseInt(val, 10) || 1);
+            ex.minutes = mins;
+            ex.duration = mins + '分';
+            saveAppData();
+            renderWorkoutSection();
+        }
+
         function renderWorkoutSection() {
             const sched = getScheduleForDate(selectedDate);
             const completed = isSelectedDateCompleted();
@@ -1312,10 +1394,9 @@
                 ? '完了したワーク'
                 : '本日のメニュー';
             document.getElementById('schedule-subtitle').textContent =
-                (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日(' + WEEKDAY_NAMES[selectedDate.getDay()] + ') ' + sched.title + (sched.subtitle ? ' ・ ' + sched.subtitle : '');
+                (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日(' + WEEKDAY_NAMES[selectedDate.getDay()] + ') ' + sched.title;
             document.getElementById('daily-overall-memo-input').value = sched.memo || '';
 
-            const badgeEl = document.getElementById('schedule-type-badge');
             const changeSchedBtn = document.getElementById('btn-change-schedule');
             const cancelBtnEl = document.getElementById('btn-cancel-completed-workout');
             const memoSectionEl = document.getElementById('workout-memo-section');
@@ -1323,22 +1404,12 @@
             const startActionsEl = document.getElementById('workout-start-actions');
 
             if (completed) {
-                if (badgeEl) badgeEl.classList.add('hidden');
                 if (changeSchedBtn) changeSchedBtn.classList.add('hidden');
                 if (cancelBtnEl) cancelBtnEl.classList.remove('hidden');
                 if (memoSectionEl) memoSectionEl.classList.add('hidden');
                 if (addLinkWrapEl) addLinkWrapEl.classList.add('hidden');
                 if (startActionsEl) startActionsEl.classList.add('hidden');
             } else {
-                if (badgeEl) {
-                    badgeEl.classList.remove('hidden');
-                    badgeEl.textContent = sched.badge;
-                    badgeEl.className = sched.badge === '筋トレ'
-                        ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF5FF] text-[#007AFF]'
-                        : sched.badge === '軽めの日'
-                            ? 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700'
-                            : 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F2F2F7] text-[#8E8E93]';
-                }
                 if (changeSchedBtn) changeSchedBtn.classList.remove('hidden');
                 if (cancelBtnEl) cancelBtnEl.classList.add('hidden');
                 if (memoSectionEl) memoSectionEl.classList.remove('hidden');
@@ -1350,7 +1421,7 @@
             let totalVolume = 0;
 
             if (!sched.exercises || sched.exercises.length === 0) {
-                document.getElementById('exercise-count-display').textContent = completed ? '0種目' : '休養日';
+                document.getElementById('exercise-count-display').textContent = completed ? '0種目' : '休み';
                 document.getElementById('total-volume-display').textContent = '0kg';
                 const hist = appData.workoutHistory.find(h => h.date === formatDateKey(selectedDate));
                 const mins = hist ? Math.max(1, Math.round(hist.durationSec / 60)) : 0;
@@ -1371,7 +1442,8 @@
 
                 if (isMinutesOnlyExercise(ex)) {
                     const minsVal = ex.minutes || 20;
-                    return '<div class="rounded-xl bg-[#F2F2F7]/60 p-3 flex items-center justify-between gap-3">' +
+                    return '<div class="rounded-xl bg-[#F2F2F7]/60 p-3 space-y-2">' +
+                        '<div class="flex items-center justify-between gap-3">' +
                         '<div class="flex items-center gap-3">' +
                         thumb +
                         '<div>' +
@@ -1379,6 +1451,8 @@
                         '<span class="text-xs text-[#6E6E73]">' + minsVal + '分</span>' +
                         noteDisplay +
                         '</div>' +
+                        '</div>' +
+                        (!completed ? '<div class="flex items-center gap-1.5 text-xs"><input type="number" min="1" value="' + minsVal + '" onchange="updateHomeExerciseMinutes(' + idx + ', this.value)" class="w-14 text-center py-1 rounded bg-white font-bold tabular-nums" /><span class="text-[#6E6E73]">分</span></div>' : '') +
                         '</div>' +
                         '</div>';
                 }
@@ -1422,9 +1496,15 @@
                         '</div>';
                 }
 
-                const setsHtml = (ex.sets || []).map((s, sIdx) => '<div class="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white text-xs tabular-nums">' +
-                    '<span class="font-semibold text-[#8E8E93]">SET ' + (sIdx + 1) + '</span>' +
-                    '<span class="font-bold text-[#111827]">' + s.weight + 'kg × ' + s.reps + '回</span>' +
+                const editableSetsHtml = (ex.sets || []).map((s, sIdx) => '<div class="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-white text-xs tabular-nums">' +
+                    '<span class="font-semibold text-[#8E8E93] w-12">SET ' + (sIdx + 1) + '</span>' +
+                    '<div class="flex items-center gap-1.5">' +
+                    '<input type="number" step="0.5" value="' + s.weight + '" onchange="updateHomeExerciseSetField(' + idx + ', ' + sIdx + ', \'weight\', this.value)" class="w-16 text-center py-1 rounded bg-[#F2F2F7] font-bold text-[#111827]" />' +
+                    '<span class="text-[#8E8E93]">kg</span>' +
+                    '<span>×</span>' +
+                    '<input type="number" value="' + s.reps + '" onchange="updateHomeExerciseSetField(' + idx + ', ' + sIdx + ', \'reps\', this.value)" class="w-14 text-center py-1 rounded bg-[#F2F2F7] font-bold text-[#111827]" />' +
+                    '<span class="text-[#8E8E93]">回</span>' +
+                    '</div>' +
                     '</div>').join('');
 
                 return '<div class="rounded-xl bg-[#F2F2F7]/60 overflow-hidden">' +
@@ -1437,11 +1517,14 @@
                     noteDisplay +
                     '</div>' +
                     '</div>' +
-                    '<span class="text-xs text-[#007AFF] font-semibold">' + (isExpanded ? '閉じる ▲' : '詳細 ▼') + '</span>' +
+                    '<span class="text-xs text-[#007AFF] font-semibold">' + (isExpanded ? '閉じる ▲' : '詳細・変更 ▼') + '</span>' +
                     '</div>' +
-                    '<div class="' + (isExpanded ? 'block' : 'hidden') + ' px-3 pb-3 pt-1 space-y-1.5">' +
-                    '<div class="text-[11px] font-semibold text-[#8E8E93] mb-1">予定セット内容</div>' +
-                    setsHtml +
+                    '<div class="' + (isExpanded ? 'block' : 'hidden') + ' px-3 pb-3 pt-1 space-y-2">' +
+                    '<div class="flex items-center justify-between text-[11px] font-semibold text-[#8E8E93]">' +
+                    '<span>セット内容の変更</span>' +
+                    '<label class="flex items-center gap-1 text-[#111827]">セット数:<input type="number" min="1" max="15" value="' + (ex.sets?.length || 1) + '" onchange="updateHomeExerciseSetCount(' + idx + ', this.value)" class="w-12 text-center py-0.5 rounded bg-white border border-[#E5E5EA] font-bold tabular-nums" /></label>' +
+                    '</div>' +
+                    editableSetsHtml +
                     '</div>' +
                     '</div>';
             }).join('');
@@ -1695,25 +1778,43 @@
 
         function startCurrentExercise() { startSetWorkTimer(); }
 
+        function onLiveSetAdjust(field, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const ex = sched.exercises[woSession.exIndex];
+            if (!ex || !ex.sets || !ex.sets[woSession.setIndex]) return;
+            ex.sets[woSession.setIndex][field] = parseFloat(val) || 0;
+            const currentSet = ex.sets[woSession.setIndex];
+            document.getElementById('wo-active-target').textContent = currentSet.weight + 'kg × ' + currentSet.reps + '回';
+            saveAppData();
+        }
+
         function startSetWorkTimer() {
             clearWorkoutTimer();
             const sched = getScheduleForDate(selectedDate);
             const ex = sched.exercises[woSession.exIndex];
             woSession.workSeconds = 0;
             document.getElementById('wo-active-ex-name').textContent = ex.name;
+            const adjustBox = document.getElementById('wo-active-adjust-box');
 
             if (isMinutesOnlyExercise(ex)) {
                 const minsVal = ex.minutes || 20;
                 document.getElementById('wo-active-set-badge').textContent = '有酸素（分指定）';
                 document.getElementById('wo-active-target').textContent = '目標: ' + minsVal + '分';
+                if (adjustBox) adjustBox.classList.add('hidden');
             } else if (ex.type === 'cardio' || getBoundMuscleForExercise(ex) === '体幹' || getBoundMuscleForExercise(ex) === '有酸素') {
                 const currentSet = ex.sets[woSession.setIndex];
                 document.getElementById('wo-active-set-badge').textContent = 'SET ' + (woSession.setIndex + 1) + ' / ' + ex.sets.length;
                 document.getElementById('wo-active-target').textContent = '目標: ' + currentSet.reps + '秒';
+                if (adjustBox) adjustBox.classList.add('hidden');
             } else {
                 const currentSet = ex.sets[woSession.setIndex];
                 document.getElementById('wo-active-set-badge').textContent = 'SET ' + (woSession.setIndex + 1) + ' / ' + ex.sets.length;
                 document.getElementById('wo-active-target').textContent = currentSet.weight + 'kg × ' + currentSet.reps + '回';
+                if (adjustBox) {
+                    adjustBox.classList.remove('hidden');
+                    document.getElementById('wo-live-weight-input').value = currentSet.weight;
+                    document.getElementById('wo-live-reps-input').value = currentSet.reps;
+                }
             }
 
             document.getElementById('wo-active-timer').textContent = '00:00';
@@ -2126,15 +2227,6 @@
             const durationPoints = dateKeys.map(k => {
                 const log = appData.workoutHistory.find(h => h.date === k);
                 if (log) return Math.max(1, Math.round((log.durationSec || 0) / 60));
-                const ov = appData.dateOverrides[k];
-                if (ov && Array.isArray(ov.exercises) && ov.exercises.length > 0) {
-                    let secSum = 0;
-                    ov.exercises.forEach(ex => {
-                        secSum += ex.actualSeconds || 0;
-                        if (isMinutesOnlyExercise(ex) && ex.minutes) secSum += ex.minutes * 60;
-                    });
-                    return secSum > 0 ? Math.max(1, Math.round(secSum / 60)) : 0;
-                }
                 return 0;
             });
 
@@ -2187,7 +2279,6 @@
             set.add(curMonth);
             appData.workoutHistory.forEach(h => { if (h.date && h.date.length >= 7) set.add(h.date.slice(0, 7)); });
             Object.keys(appData.weightLogs).forEach(d => { if (d && d.length >= 7) set.add(d.slice(0, 7)); });
-            Object.keys(appData.dateOverrides).forEach(d => { if (d && d.length >= 7) set.add(d.slice(0, 7)); });
             return Array.from(set).sort((a, b) => b.localeCompare(a));
         }
 
@@ -2214,7 +2305,6 @@
             addDateToWeeks(formatDateKey(selectedDate));
             appData.workoutHistory.forEach(h => { if (h.date) addDateToWeeks(h.date); });
             Object.keys(appData.weightLogs).forEach(d => addDateToWeeks(d));
-            Object.keys(appData.dateOverrides).forEach(d => addDateToWeeks(d));
 
             return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
         }
@@ -2310,7 +2400,6 @@
             if (analyticsMode === 'exercise') {
                 Object.keys(EXERCISE_IMAGE_MAP).forEach(k => items.add(k));
                 appData.workoutHistory.forEach(h => h.exercises?.forEach(e => items.add(e.name)));
-                Object.values(appData.dateOverrides).forEach(o => o.exercises?.forEach(e => items.add(e.name)));
             } else if (analyticsMode === 'muscle') {
                 MUSCLE_CATEGORIES.forEach(m => items.add(m));
             }
@@ -2514,6 +2603,1675 @@
             sched.subtitle = document.getElementById('sched-sub-input').value.trim();
             sched.memo = document.getElementById('sched-memo-input').value.trim();
             if (sched.badge === '休養日') sched.exercises = [];
+            if (document.getElementById('sched-apply-weekly')?.checked) {
+                appData.weeklyTemplates[selectedDate.getDay()] = JSON.parse(JSON.stringify(sched));
+            }
+            saveAppData();
+            closeScheduleModal();
+            renderAll();
+        }
+
+        function openAddExerciseModal(fromWorkoutPreview = false) {
+            isAddingFromWorkoutPreview = !!fromWorkoutPreview;
+            currentFilterMuscle = 'すべて';
+            currentSearchQuery = '';
+            document.getElementById('exercise-search-input').value = '';
+            updateMuscleChipsUI();
+            renderPresetExerciseCardsList('');
+            document.getElementById('add-exercise-modal').classList.remove('modal-hidden');
+        }
+
+        function filterPresetExercises(muscle) {
+            currentFilterMuscle = muscle;
+            updateMuscleChipsUI();
+            renderPresetExerciseCardsList(currentSearchQuery);
+        }
+
+        function onExerciseSearchInput(query) {
+            currentSearchQuery = query;
+            renderPresetExerciseCardsList(query);
+        }
+
+        function updateMuscleChipsUI() {
+            document.querySelectorAll('.muscle-chip').forEach(btn => {
+                const m = btn.getAttribute('data-muscle');
+                if (m === currentFilterMuscle) {
+                    btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-[#111827] text-white cursor-pointer muscle-chip';
+                } else {
+                    btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip';
+                }
+            });
+        }
+
+        function renderPresetExerciseCardsList(searchQuery) {
+            const listContainer = document.getElementById('preset-exercise-cards-list');
+            const entries = Object.entries(EXERCISE_IMAGE_MAP);
+
+            const filtered = entries.filter(([name, data]) => {
+                const matchMuscle = currentFilterMuscle === 'すべて' || data.muscle === currentFilterMuscle;
+                const matchSearch = !searchQuery || name.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchMuscle && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<p class="text-xs text-[#8E8E93] text-center py-4">該当する種目がありません</p>';
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map(([name, data]) => {
+                const thumb = getExerciseThumbnailHtml(name, "w-16 h-16");
+                return '<div onclick="selectPresetCard(\'' + name + '\', \'' + data.muscle + '\', \'' + data.type + '\')"' +
+                    ' class="flex items-center justify-between p-2.5 rounded-xl bg-[#F2F2F7]/70 hover:bg-[#EBF5FF] hover:border-[#007AFF] border border-transparent transition-all cursor-pointer group">' +
+                    '<div class="flex items-center gap-3">' +
+                    thumb +
+                    '<div>' +
+                    '<h4 class="text-sm font-bold text-[#111827] group-hover:text-[#007AFF]">' + name + '</h4>' +
+                    '<span class="text-[10px] text-[#8E8E93] bg-white px-2 py-0.5 rounded-md border border-[#E5E5EA]">' + data.muscle + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '<span class="text-xs font-semibold text-[#007AFF] opacity-0 group-hover:opacity-100 transition-opacity pr-1">選択 ›</span>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function selectPresetCard(name, muscle, type) {
+            document.getElementById('new-ex-name').value = name;
+            document.getElementById('new-ex-muscle').value = muscle;
+            document.getElementById('new-ex-type').value = type;
+            document.getElementById('selected-preview-thumb').innerHTML = getExerciseThumbnailHtml(name, "w-10 h-10");
+
+            const setsField = document.getElementById('dynamic-sets-field');
+            const secondField = document.getElementById('dynamic-second-field');
+            const thirdField = document.getElementById('dynamic-third-field');
+
+            if (name === 'ランニング' || name === '傾斜ウォーキング') {
+                setsField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">時間(分)</label>' +
+                    '<input type="number" id="new-ex-minutes" value="20" min="1" max="300"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                secondField.innerHTML = '<span class="block text-[10px] text-[#8E8E93] pt-6">セットなし</span>';
+                thirdField.innerHTML = '';
+            } else if (muscle === '体幹') {
+                setsField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">セット数</label>' +
+                    '<input type="number" id="new-ex-sets" value="3" min="1" max="10"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                secondField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">秒数(秒)</label>' +
+                    '<input type="number" id="new-ex-weight" value="30"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                thirdField.innerHTML = '';
+            } else {
+                setsField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">セット数</label>' +
+                    '<input type="number" id="new-ex-sets" value="3" min="1" max="10"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                secondField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">重量(kg)</label>' +
+                    '<input type="number" id="new-ex-weight" step="0.5" value="20"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                thirdField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">回数</label>' +
+                    '<input type="number" id="new-ex-reps" value="10" min="1" max="100"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+            }
+        }
+
+        function closeAddExerciseModal() {
+            document.getElementById('add-exercise-modal').classList.add('modal-hidden');
+            isAddingFromWorkoutPreview = false;
+        }
+
+        function handleCreateExercise(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-ex-name').value.trim();
+            const muscle = EXERCISE_IMAGE_MAP[name]?.muscle || document.getElementById('new-ex-muscle').value;
+            const type = EXERCISE_IMAGE_MAP[name]?.type || document.getElementById('new-ex-type').value;
+            if (!name) { alert('種目を選択してください'); return; }
+
+            const sched = getScheduleForDate(selectedDate);
+            if (sched.badge === '休養日') { sched.badge = '筋トレ'; sched.title = 'カスタムトレーニング'; }
+
+            if (name === 'ランニング' || name === '傾斜ウォーキング') {
+                const mins = parseInt(document.getElementById('new-ex-minutes')?.value, 10) || 20;
+                sched.exercises.push({
+                    id: 'ex-' + Date.now(),
+                    name: name,
+                    muscle: muscle,
+                    type: 'cardio',
+                    minutes: mins,
+                    duration: mins + '分',
+                    actualSeconds: mins * 60,
+                    restSeconds: 60,
+                    note: '',
+                    done: false
+                });
+            } else {
+                const setCount = parseInt(document.getElementById('new-ex-sets')?.value, 10) || 3;
+                const paramVal = parseFloat(document.getElementById('new-ex-weight')?.value) || 0;
+                const repsVal = parseInt(document.getElementById('new-ex-reps')?.value, 10) || 10;
+
+                const sets = Array.from({ length: setCount }, () => {
+                    if (muscle === '体幹') {
+                        return { weight: 0, reps: paramVal, done: false };
+                    } else {
+                        return { weight: paramVal, reps: repsVal, done: false };
+                    }
+                });
+
+                sched.exercises.push({
+                    id: 'ex-' + Date.now(),
+                    name: name,
+                    muscle: muscle,
+                    type: type,
+                    targetReps: muscle === '体幹' ? (paramVal + '秒') : String(repsVal),
+                    restSeconds: 90,
+                    note: '',
+                    sets: sets
+                });
+            }
+
+            const backToPreview = isAddingFromWorkoutPreview;
+            saveAppData();
+            closeAddExerciseModal();
+            renderAll();
+            if (backToPreview) {
+                renderPreWorkoutList();
+            }
+        }
+
+        function openManualInputModal() {
+            const sched = getScheduleForDate(selectedDate);
+            const existingHist = appData.workoutHistory.find(h => h.date === formatDateKey(selectedDate));
+            document.getElementById('manual-duration-input').value = existingHist ? Math.max(1, Math.round(existingHist.durationSec / 60)) : '45';
+            document.getElementById('manual-memo-input').value = sched.memo || '';
+            renderManualEditorList();
+            document.getElementById('manual-input-modal').classList.remove('modal-hidden');
+        }
+
+        function renderManualEditorList() {
+            const sched = getScheduleForDate(selectedDate);
+            const listEl = document.getElementById('manual-exercises-editor-list');
+            if (!sched.exercises || sched.exercises.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-[#8E8E93] py-2">種目がありません。「＋種目を追加」してください。</p>';
+                return;
+            }
+
+            listEl.innerHTML = sched.exercises.map((ex, exIdx) => {
+                const thumb = getExerciseThumbnailHtml(ex.name, "w-8 h-8");
+                const boundCat = getBoundMuscleForExercise(ex);
+                ex.muscle = boundCat;
+
+                let detailInputsHtml = '';
+                if (isMinutesOnlyExercise(ex)) {
+                    detailInputsHtml = '<div class="flex items-center gap-2 text-xs">' +
+                        '<span class="text-gray-500">時間(分):</span>' +
+                        '<input type="number" min="1" value="' + (ex.minutes || 20) + '" onchange="updateManualMinutesOnly(' + exIdx + ', this.value)" class="w-16 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">分</span>' +
+                        '</div>';
+                } else if (ex.type === 'cardio' || boundCat === '有酸素' || boundCat === '体幹') {
+                    detailInputsHtml = '<div class="flex items-center gap-2 text-xs">' +
+                        '<span class="text-gray-500">秒数:</span>' +
+                        '<input type="number" value="' + (ex.sets?.[0]?.reps || 30) + '" onchange="updateManualCardio(' + exIdx + ', this.value)" class="w-20 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">秒</span>' +
+                        '</div>';
+                } else {
+                    detailInputsHtml = '<div class="flex flex-wrap items-center gap-2 text-xs">' +
+                        '<span class="text-gray-500">セット:</span>' +
+                        '<input type="number" min="1" max="15" value="' + (ex.sets?.length || 3) + '" onchange="updateManualSetCount(' + exIdx + ', this.value)" class="w-12 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">重量:</span>' +
+                        '<input type="number" step="0.5" value="' + (ex.sets?.[0]?.weight || 20) + '" onchange="updateManualWeight(' + exIdx + ', this.value)" class="w-16 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">kg</span>' +
+                        '<span class="text-gray-500">回数:</span>' +
+                        '<input type="number" value="' + (ex.sets?.[0]?.reps || 10) + '" onchange="updateManualReps(' + exIdx + ', this.value)" class="w-14 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">回</span>' +
+                        '</div>';
+                }
+
+                return '<div class="swipe-row-wrapper">' +
+                    '<div class="swipe-delete-bg" onclick="deleteManualExercise(' + exIdx + ')">削除</div>' +
+                    '<div class="swipe-row-content p-2.5 rounded-xl text-xs space-y-2" ' +
+                    'ontouchstart="handleSwipeStart(event, this)" ontouchmove="handleSwipeMove(event, this)" ontouchend="handleSwipeEnd(event, this)">' +
+                    '<div class="flex items-center justify-between gap-2">' +
+                    '<div class="flex items-center gap-2 min-w-0">' + thumb + '<span class="font-bold text-[#111827] truncate">' + ex.name + '</span></div>' +
+                    '<span class="text-[11px] font-semibold text-[#6E6E73] shrink-0">' + boundCat + '</span>' +
+                    '</div>' +
+                    detailInputsHtml +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function handleSwipeStart(e, el) {
+            swipeState.startX = e.touches[0].clientX;
+            swipeState.currentEl = el;
+        }
+
+        function handleSwipeMove(e, el) {
+            if (!swipeState.currentEl) return;
+            const diffX = e.touches[0].clientX - swipeState.startX;
+            if (diffX < 0) {
+                const clamped = Math.max(diffX, -76);
+                el.style.transform = 'translateX(' + clamped + 'px)';
+            }
+        }
+
+        function handleSwipeEnd(e, el) {
+            if (!swipeState.currentEl) return;
+            const diffX = e.changedTouches[0].clientX - swipeState.startX;
+            if (diffX < -45) {
+                el.style.transform = 'translateX(-76px)';
+            } else {
+                el.style.transform = 'translateX(0px)';
+            }
+            swipeState.currentEl = null;
+        }
+
+        function updateManualMinutesOnly(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const mins = Math.max(1, parseInt(val, 10) || 1);
+            sched.exercises[exIdx].minutes = mins;
+            sched.exercises[exIdx].duration = mins + '分';
+            sched.exercises[exIdx].actualSeconds = mins * 60;
+            saveAppData();
+        }
+
+        function updateManualCardio(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            if (sched.exercises[exIdx].sets && sched.exercises[exIdx].sets[0]) {
+                sched.exercises[exIdx].sets[0].reps = parseFloat(val) || 0;
+            } else {
+                sched.exercises[exIdx].sets = [{ weight: 0, reps: parseFloat(val) || 0, done: false }];
+            }
+            saveAppData();
+        }
+
+        function updateManualSetCount(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const count = Math.max(1, Math.min(15, parseInt(val, 10) || 1));
+            const ex = sched.exercises[exIdx];
+            const currentSets = ex.sets || [{ weight: 20, reps: 10, done: false }];
+            const templateSet = currentSets[currentSets.length - 1] || { weight: 20, reps: 10, done: false };
+            if (count > currentSets.length) {
+                while (currentSets.length < count) {
+                    currentSets.push({ weight: templateSet.weight, reps: templateSet.reps, done: false });
+                }
+            } else if (count < currentSets.length) {
+                currentSets.length = count;
+            }
+            ex.sets = currentSets;
+            saveAppData();
+            renderManualEditorList();
+        }
+
+        function updateManualWeight(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const w = parseFloat(val) || 0;
+            if (sched.exercises[exIdx].sets) {
+                sched.exercises[exIdx].sets.forEach(s => s.weight = w);
+            }
+            saveAppData();
+        }
+
+        function updateManualReps(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const r = parseFloat(val) || 0;
+            if (sched.exercises[exIdx].sets) {
+                sched.exercises[exIdx].sets.forEach(s => s.reps = r);
+            }
+            saveAppData();
+        }
+
+        function deleteManualExercise(exIdx) {
+            const sched = getScheduleForDate(selectedDate);
+            sched.exercises.splice(exIdx, 1);
+            saveAppData();
+            renderManualEditorList();
+            renderWorkoutSection();
+        }
+
+        function closeManualInputModal() {
+            document.getElementById('manual-input-modal').classList.add('modal-hidden');
+        }
+
+        function handleSaveManualInput(e) {
+            e.preventDefault();
+            const sched = getScheduleForDate(selectedDate);
+            const durationMins = parseInt(document.getElementById('manual-duration-input').value, 10) || 45;
+            const memoText = document.getElementById('manual-memo-input').value.trim();
+
+            sched.memo = memoText;
+
+            let totalVol = 0;
+            const exCount = (sched.exercises || []).length || 1;
+            const perExSec = Math.round((durationMins * 60) / exCount);
+
+            (sched.exercises || []).forEach(ex => {
+                ex.muscle = getBoundMuscleForExercise(ex);
+                if (isMinutesOnlyExercise(ex)) {
+                    ex.actualSeconds = (ex.minutes || durationMins) * 60;
+                    ex.done = true;
+                } else {
+                    if (ex.sets && ex.sets.length > 0) {
+                        ex.sets.forEach(s => {
+                            s.done = true;
+                            totalVol += (s.weight || 0) * (s.reps || 0);
+                        });
+                    }
+                    if (ex.type === 'cardio') ex.done = true;
+                    ex.actualSeconds = perExSec;
+                }
+            });
+
+            const dateStr = formatDateKey(selectedDate);
+            const existingHistIdx = appData.workoutHistory.findIndex(h => h.date === dateStr);
+            const histItem = {
+                date: dateStr,
+                totalVolume: totalVol,
+                durationSec: durationMins * 60,
+                exercises: JSON.parse(JSON.stringify(sched.exercises))
+            };
+
+            if (existingHistIdx >= 0) {
+                appData.workoutHistory[existingHistIdx] = histItem;
+            } else {
+                appData.workoutHistory.push(histItem);
+            }
+
+            saveAppData();
+            closeManualInputModal();
+            renderAll();
+            alert('✓ 手動トレーニングデータを記録しました！');
+        }
+
+        function setHomeChartType(type) {
+            homeChartType = type;
+            document.getElementById('home-chart-tab-duration').className = type === 'duration' ? 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            document.getElementById('home-chart-tab-weight').className = type === 'weight' ? 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            renderHomeGrowthChart();
+        }
+
+        function setHomeChartRange(range) {
+            homeChartRange = range;
+            renderHomeGrowthChart();
+        }
+
+        function getHomeRangeDateKeys() {
+            const keys = [];
+            const days = homeChartRange === 'month' ? 30 : 7;
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(selectedDate);
+                d.setDate(selectedDate.getDate() - i);
+                keys.push(formatDateKey(d));
+            }
+            return keys;
+        }
+
+        function renderHomeGrowthChart() {
+            const ctx = document.getElementById('homeGrowthChart');
+            const unitHeader = document.getElementById('home-chart-unit-header');
+            if (!ctx) return;
+            if (homeChartInstance) homeChartInstance.destroy();
+
+            const dateKeys = getHomeRangeDateKeys();
+            const labels = dateKeys.map(k => k.slice(5));
+
+            if (homeChartType === 'weight') {
+                if (unitHeader) unitHeader.textContent = '単位: kg';
+                const dataPoints = dateKeys.map(k => appData.weightLogs[k] !== undefined ? Number(appData.weightLogs[k]) : null);
+                const numericVals = dataPoints.filter(v => v !== null && !isNaN(v));
+                const minVal = numericVals.length ? Math.floor((Math.min(...numericVals) - 0.5) * 10) / 10 : 50;
+                const maxVal = numericVals.length ? Math.ceil((Math.max(...numericVals) + 0.5) * 10) / 10 : 70;
+
+                homeChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '体重 (kg)',
+                            data: dataPoints,
+                            borderColor: '#111827',
+                            backgroundColor: 'rgba(17, 24, 39, 0.08)',
+                            pointBackgroundColor: '#007AFF',
+                            pointRadius: 4,
+                            spanGaps: true,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
+                        plugins: {
+                            legend: { display: false },
+                            showWeightLabels: true
+                        },
+                        scales: {
+                            y: {
+                                suggestedMin: minVal,
+                                suggestedMax: maxVal,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value + ' kg';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            if (unitHeader) unitHeader.textContent = '単位: 分';
+            const durationPoints = dateKeys.map(k => {
+                const log = appData.workoutHistory.find(h => h.date === k);
+                if (log) return Math.max(1, Math.round((log.durationSec || 0) / 60));
+                return 0;
+            });
+
+            homeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '運動時間 (分)',
+                        data: durationPoints,
+                        backgroundColor: '#007AFF',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, showWeightLabels: false },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value + ' 分';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setDataPeriod(period) {
+            dataPeriod = period;
+            ['all', 'month', 'week'].forEach(p => {
+                const btn = document.getElementById('btn-period-' + p);
+                if (btn) {
+                    btn.className = p === period
+                        ? 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer'
+                        : 'px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+                }
+            });
+            populatePeriodNavigator();
+            renderDataTab();
+        }
+
+        function getAvailableMonthKeys() {
+            const set = new Set();
+            const curMonth = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0');
+            set.add(curMonth);
+            appData.workoutHistory.forEach(h => { if (h.date && h.date.length >= 7) set.add(h.date.slice(0, 7)); });
+            Object.keys(appData.weightLogs).forEach(d => { if (d && d.length >= 7) set.add(d.slice(0, 7)); });
+            return Array.from(set).sort((a, b) => b.localeCompare(a));
+        }
+
+        function getWeekStartDate(d) {
+            const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            copy.setDate(copy.getDate() - copy.getDay());
+            return copy;
+        }
+
+        function getAvailableWeekKeys() {
+            const map = new Map();
+            const addDateToWeeks = (dateStr) => {
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return;
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const ws = getWeekStartDate(d);
+                const key = formatDateKey(ws);
+                if (!map.has(key)) {
+                    const label = ws.getFullYear() + '年 ' + (ws.getMonth() + 1) + '月 (' + (ws.getMonth() + 1) + '/' + ws.getDate() + '週)';
+                    map.set(key, label);
+                }
+            };
+
+            addDateToWeeks(formatDateKey(selectedDate));
+            appData.workoutHistory.forEach(h => { if (h.date) addDateToWeeks(h.date); });
+            Object.keys(appData.weightLogs).forEach(d => addDateToWeeks(d));
+
+            return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+        }
+
+        function populatePeriodNavigator() {
+            const monthNav = document.getElementById('data-month-nav');
+            const weekNav = document.getElementById('data-week-nav');
+            const monthSelect = document.getElementById('data-month-select');
+            const weekSelect = document.getElementById('data-week-select');
+
+            if (monthNav) monthNav.classList.add('hidden');
+            if (weekNav) weekNav.classList.add('hidden');
+
+            if (dataPeriod === 'month') {
+                const months = getAvailableMonthKeys();
+                if (!selectedDataMonthKey || !months.includes(selectedDataMonthKey)) {
+                    selectedDataMonthKey = months[0];
+                }
+                monthSelect.innerHTML = months.map(ym => {
+                    const [yr, mo] = ym.split('-');
+                    return '<option value="' + ym + '"' + (ym === selectedDataMonthKey ? ' selected' : '') + '>' + yr + '年 ' + Number(mo) + '月</option>';
+                }).join('');
+                monthNav.classList.remove('hidden');
+            } else if (dataPeriod === 'week') {
+                const weeks = getAvailableWeekKeys();
+                if (!selectedDataWeekKey || !weeks.some(w => w[0] === selectedDataWeekKey)) {
+                    selectedDataWeekKey = weeks[0]?.[0] || formatDateKey(getWeekStartDate(selectedDate));
+                }
+                weekSelect.innerHTML = weeks.map(([wkKey, label]) =>
+                    '<option value="' + wkKey + '"' + (wkKey === selectedDataWeekKey ? ' selected' : '') + '>' + label + '</option>'
+                ).join('');
+                weekNav.classList.remove('hidden');
+            }
+        }
+
+        function onDataMonthSelect(ym) {
+            selectedDataMonthKey = ym;
+            renderDataTab();
+        }
+
+        function onDataWeekSelect(wkKey) {
+            selectedDataWeekKey = wkKey;
+            renderDataTab();
+        }
+
+        function isDateWithinPeriod(dateStr) {
+            if (dataPeriod === 'all') return true;
+            if (dataPeriod === 'month') {
+                return dateStr.startsWith(selectedDataMonthKey || '');
+            }
+            if (dataPeriod === 'week') {
+                const parts = (selectedDataWeekKey || '').split('-');
+                if (parts.length !== 3) return true;
+                const startD = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const endD = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate() + 6);
+                const tParts = dateStr.split('-');
+                if (tParts.length !== 3) return false;
+                const targetD = new Date(Number(tParts[0]), Number(tParts[1]) - 1, Number(tParts[2]));
+                return targetD >= startD && targetD <= endD;
+            }
+            return true;
+        }
+
+        function getFilteredWorkoutHistory() {
+            return appData.workoutHistory.filter(h => isDateWithinPeriod(h.date));
+        }
+
+        function setAnalyticsMode(mode) {
+            analyticsMode = mode;
+            ['exercise', 'muscle', 'bodyweight'].forEach(m => {
+                document.getElementById('tab-ana-' + m).className = m === mode ? 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            });
+            const targetSelect = document.getElementById('analytics-target-select');
+            const metricToggle = document.getElementById('analytics-metric-toggle');
+            targetSelect.classList.toggle('hidden', mode === 'bodyweight');
+            if (metricToggle) metricToggle.classList.toggle('hidden', mode === 'bodyweight');
+            populateAnalyticsSelector();
+            renderAnalyticsChart();
+        }
+
+        function setAnalyticsMetric(metric) {
+            analyticsMetric = metric;
+            const wBtn = document.getElementById('btn-metric-weight');
+            const dBtn = document.getElementById('btn-metric-duration');
+            if (wBtn) wBtn.className = metric === 'weight' ? 'px-2.5 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            if (dBtn) dBtn.className = metric === 'duration' ? 'px-2.5 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            renderAnalyticsChart();
+        }
+
+        function populateAnalyticsSelector() {
+            const select = document.getElementById('analytics-target-select');
+            const items = new Set();
+            if (analyticsMode === 'exercise') {
+                Object.keys(EXERCISE_IMAGE_MAP).forEach(k => items.add(k));
+                appData.workoutHistory.forEach(h => h.exercises?.forEach(e => items.add(e.name)));
+            } else if (analyticsMode === 'muscle') {
+                MUSCLE_CATEGORIES.forEach(m => items.add(m));
+            }
+            select.innerHTML = Array.from(items).map(n => '<option value="' + n + '">' + n + '</option>').join('');
+        }
+
+        function renderDataTab() {
+            populatePeriodNavigator();
+            const filteredLogs = getFilteredWorkoutHistory();
+            let sumVol = 0, sumSec = 0;
+            filteredLogs.forEach(h => {
+                sumVol += h.totalVolume || 0;
+                sumSec += h.durationSec || 0;
+            });
+
+            const weightEntries = Object.entries(appData.weightLogs)
+                .filter(([d]) => isDateWithinPeriod(d))
+                .sort((a, b) => a[0].localeCompare(b[0]));
+
+            document.getElementById('stat-total-vol').textContent = sumVol.toLocaleString() + 'kg';
+            document.getElementById('stat-total-time').textContent = Math.round(sumSec / 60) + '分';
+            document.getElementById('stat-workout-days').textContent = filteredLogs.length + '回';
+            document.getElementById('stat-latest-weight').textContent = weightEntries.length ? (Number(weightEntries[weightEntries.length - 1][1]).toFixed(1) + 'kg') : '-- kg';
+
+            renderMuscleBreakdown(filteredLogs);
+            populateAnalyticsSelector();
+            renderAnalyticsChart();
+        }
+
+        function renderMuscleBreakdown(filteredLogs) {
+            const listEl = document.getElementById('muscle-breakdown-list');
+            if (!listEl) return;
+
+            const stats = {};
+            MUSCLE_CATEGORIES.forEach(cat => {
+                stats[cat] = { volume: 0, seconds: 0 };
+            });
+
+            filteredLogs.forEach(h => {
+                const exList = h.exercises || [];
+                const totalExCount = exList.length || 1;
+                exList.forEach(ex => {
+                    const cat = getBoundMuscleForExercise(ex);
+                    if (!stats[cat]) stats[cat] = { volume: 0, seconds: 0 };
+                    let exVol = 0;
+                    if (ex.sets) {
+                        ex.sets.forEach(s => {
+                            exVol += (s.weight || 0) * (s.reps || 0);
+                        });
+                    }
+                    stats[cat].volume += exVol;
+                    const sec = ex.actualSeconds || (isMinutesOnlyExercise(ex) && ex.minutes ? ex.minutes * 60 : Math.round((h.durationSec || 0) / totalExCount));
+                    stats[cat].seconds += sec;
+                });
+            });
+
+            listEl.innerHTML = Object.entries(stats).map(([cat, st]) => {
+                const mins = Math.round(st.seconds / 60);
+                return '<div class="p-3 rounded-xl bg-[#F2F2F7] flex items-center justify-between">' +
+                    '<span class="text-xs font-bold text-[#111827]">' + cat + '</span>' +
+                    '<div class="text-right text-xs tabular-nums">' +
+                    '<span class="font-bold text-[#111827] block">' + st.volume.toLocaleString() + ' kg</span>' +
+                    '<span class="text-[11px] text-[#007AFF] font-semibold">' + mins + ' 分</span>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function renderAnalyticsChart() {
+            const ctx = document.getElementById('detailAnalyticsChart');
+            if (!ctx) return;
+            if (detailChartInstance) detailChartInstance.destroy();
+
+            const target = document.getElementById('analytics-target-select').value;
+            const filteredLogs = getFilteredWorkoutHistory().slice().sort((a, b) => a.date.localeCompare(b.date));
+
+            if (analyticsMode === 'bodyweight') {
+                const wEntries = Object.entries(appData.weightLogs)
+                    .filter(([d]) => isDateWithinPeriod(d))
+                    .sort((a, b) => a[0].localeCompare(b[0]));
+
+                detailChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: wEntries.length ? wEntries.map(e => e[0].slice(5)) : ['データなし'],
+                        datasets: [{
+                            label: '体重 (kg)',
+                            data: wEntries.length ? wEntries.map(e => Number(e[1])) : [0],
+                            borderColor: '#007AFF',
+                            backgroundColor: 'rgba(0, 122, 255, 0.08)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
+                        plugins: { showWeightLabels: true }
+                    }
+                });
+                return;
+            }
+
+            if (!filteredLogs.length) {
+                detailChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: ['データなし'], datasets: [{ label: analyticsMetric === 'duration' ? '運動時間 (分)' : '重量 (kg)', data: [0], borderColor: '#007AFF' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { showWeightLabels: false } }
+                });
+                return;
+            }
+
+            const labels = filteredLogs.map(h => h.date.slice(5));
+            const values = filteredLogs.map(h => {
+                const exList = h.exercises || [];
+                const matched = exList.filter(e => {
+                    if (analyticsMode === 'exercise') return e.name === target;
+                    const cat = getBoundMuscleForExercise(e);
+                    return cat === target;
+                });
+
+                if (analyticsMetric === 'duration') {
+                    if (!matched.length) return 0;
+                    let sec = 0;
+                    matched.forEach(m => {
+                        sec += m.actualSeconds || (isMinutesOnlyExercise(m) && m.minutes ? m.minutes * 60 : Math.round((h.durationSec || 0) / (exList.length || 1)));
+                    });
+                    return Math.round(sec / 60);
+                } else {
+                    if (!matched.length) return 0;
+                    let vol = 0;
+                    matched.forEach(m => {
+                        if (m.sets) m.sets.forEach(s => { vol += (s.weight || 0) * (s.reps || 0); });
+                    });
+                    return vol;
+                }
+            });
+
+            detailChartInstance = new Chart(ctx, {
+                type: analyticsMetric === 'duration' ? 'bar' : 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: analyticsMetric === 'duration' ? (target + ' 運動時間(分)') : (target + ' 重量(kg)'),
+                        data: values,
+                        borderColor: '#007AFF',
+                        backgroundColor: analyticsMetric === 'duration' ? '#007AFF' : 'rgba(0, 122, 255, 0.1)',
+                        borderRadius: 6,
+                        fill: analyticsMetric !== 'duration'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { showWeightLabels: false },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (v) {
+                                    return v + (analyticsMetric === 'duration' ? ' 分' : ' kg');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function openScheduleModal() {
+            const sched = getScheduleForDate(selectedDate);
+            document.getElementById('schedule-modal-title').textContent = (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日のメニュー編集';
+            document.getElementById('sched-title-input').value = sched.title;
+            document.getElementById('sched-badge-input').value = sched.badge;
+            document.getElementById('sched-sub-input').value = sched.subtitle || '';
+            document.getElementById('sched-memo-input').value = sched.memo || '';
+            renderModalQuickExerciseList();
+            document.getElementById('schedule-modal').classList.remove('modal-hidden');
+        }
+
+        function renderModalQuickExerciseList() {
+            const sched = getScheduleForDate(selectedDate);
+            const list = document.getElementById('modal-exercise-quick-list');
+            if (!sched.exercises || sched.exercises.length === 0) { list.innerHTML = '<p class="text-xs text-[#8E8E93] py-2">種目なし</p>'; return; }
+            list.innerHTML = sched.exercises.map((ex, idx) => '<div class="flex items-center justify-between px-3 py-2 rounded-xl bg-[#F2F2F7] text-xs">' +
+                '<div class="flex items-center gap-2">' +
+                getExerciseThumbnailHtml(ex.name, "w-7 h-7") +
+                '<span class="font-semibold text-[#111827]">' + ex.name + '</span>' +
+                '</div>' +
+                '<button type="button" onclick="deleteExercise(' + idx + '); renderModalQuickExerciseList();" class="text-rose-600 font-semibold cursor-pointer">削除</button>' +
+                '</div>').join('');
+        }
+
+        function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('modal-hidden'); }
+
+        function handleSaveSchedule(e) {
+            e.preventDefault();
+            const sched = getScheduleForDate(selectedDate);
+            sched.title = document.getElementById('sched-title-input').value.trim();
+            sched.badge = document.getElementById('sched-badge-input').value;
+            sched.subtitle = document.getElementById('sched-sub-input').value.trim();
+            sched.memo = document.getElementById('sched-memo-input').value.trim();
+            if (sched.badge === '休養日') sched.exercises = [];
+            if (document.getElementById('sched-apply-weekly')?.checked) {
+                appData.weeklyTemplates[selectedDate.getDay()] = JSON.parse(JSON.stringify(sched));
+            }
+            saveAppData();
+            closeScheduleModal();
+            renderAll();
+        }
+
+        function openAddExerciseModal(fromWorkoutPreview = false) {
+            isAddingFromWorkoutPreview = !!fromWorkoutPreview;
+            currentFilterMuscle = 'すべて';
+            currentSearchQuery = '';
+            document.getElementById('exercise-search-input').value = '';
+            updateMuscleChipsUI();
+            renderPresetExerciseCardsList('');
+            document.getElementById('add-exercise-modal').classList.remove('modal-hidden');
+        }
+
+        function filterPresetExercises(muscle) {
+            currentFilterMuscle = muscle;
+            updateMuscleChipsUI();
+            renderPresetExerciseCardsList(currentSearchQuery);
+        }
+
+        function onExerciseSearchInput(query) {
+            currentSearchQuery = query;
+            renderPresetExerciseCardsList(query);
+        }
+
+        function updateMuscleChipsUI() {
+            document.querySelectorAll('.muscle-chip').forEach(btn => {
+                const m = btn.getAttribute('data-muscle');
+                if (m === currentFilterMuscle) {
+                    btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-[#111827] text-white cursor-pointer muscle-chip';
+                } else {
+                    btn.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-[#F2F2F7] text-[#6E6E73] hover:bg-[#E5E5EA] cursor-pointer muscle-chip';
+                }
+            });
+        }
+
+        function renderPresetExerciseCardsList(searchQuery) {
+            const listContainer = document.getElementById('preset-exercise-cards-list');
+            const entries = Object.entries(EXERCISE_IMAGE_MAP);
+
+            const filtered = entries.filter(([name, data]) => {
+                const matchMuscle = currentFilterMuscle === 'すべて' || data.muscle === currentFilterMuscle;
+                const matchSearch = !searchQuery || name.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchMuscle && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<p class="text-xs text-[#8E8E93] text-center py-4">該当する種目がありません</p>';
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map(([name, data]) => {
+                const thumb = getExerciseThumbnailHtml(name, "w-16 h-16");
+                return '<div onclick="selectPresetCard(\'' + name + '\', \'' + data.muscle + '\', \'' + data.type + '\')"' +
+                    ' class="flex items-center justify-between p-2.5 rounded-xl bg-[#F2F2F7]/70 hover:bg-[#EBF5FF] hover:border-[#007AFF] border border-transparent transition-all cursor-pointer group">' +
+                    '<div class="flex items-center gap-3">' +
+                    thumb +
+                    '<div>' +
+                    '<h4 class="text-sm font-bold text-[#111827] group-hover:text-[#007AFF]">' + name + '</h4>' +
+                    '<span class="text-[10px] text-[#8E8E93] bg-white px-2 py-0.5 rounded-md border border-[#E5E5EA]">' + data.muscle + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '<span class="text-xs font-semibold text-[#007AFF] opacity-0 group-hover:opacity-100 transition-opacity pr-1">選択 ›</span>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function selectPresetCard(name, muscle, type) {
+            document.getElementById('new-ex-name').value = name;
+            document.getElementById('new-ex-muscle').value = muscle;
+            document.getElementById('new-ex-type').value = type;
+            document.getElementById('selected-preview-thumb').innerHTML = getExerciseThumbnailHtml(name, "w-10 h-10");
+
+            const setsField = document.getElementById('dynamic-sets-field');
+            const secondField = document.getElementById('dynamic-second-field');
+            const thirdField = document.getElementById('dynamic-third-field');
+
+            if (name === 'ランニング' || name === '傾斜ウォーキング') {
+                setsField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">時間(分)</label>' +
+                    '<input type="number" id="new-ex-minutes" value="20" min="1" max="300"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                secondField.innerHTML = '<span class="block text-[10px] text-[#8E8E93] pt-6">セットなし</span>';
+                thirdField.innerHTML = '';
+            } else if (muscle === '体幹') {
+                setsField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">セット数</label>' +
+                    '<input type="number" id="new-ex-sets" value="3" min="1" max="10"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                secondField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">秒数(秒)</label>' +
+                    '<input type="number" id="new-ex-weight" value="30"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                thirdField.innerHTML = '';
+            } else {
+                setsField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">セット数</label>' +
+                    '<input type="number" id="new-ex-sets" value="3" min="1" max="10"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                secondField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">重量(kg)</label>' +
+                    '<input type="number" id="new-ex-weight" step="0.5" value="20"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+                thirdField.innerHTML = '<label class="block text-xs font-semibold text-[#6E6E73] mb-1">回数</label>' +
+                    '<input type="number" id="new-ex-reps" value="10" min="1" max="100"' +
+                    ' class="w-full px-3 py-2 rounded-xl bg-[#F2F2F7] text-sm font-bold tabular-nums focus:outline-none" />';
+            }
+        }
+
+        function closeAddExerciseModal() {
+            document.getElementById('add-exercise-modal').classList.add('modal-hidden');
+            isAddingFromWorkoutPreview = false;
+        }
+
+        function handleCreateExercise(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-ex-name').value.trim();
+            const muscle = EXERCISE_IMAGE_MAP[name]?.muscle || document.getElementById('new-ex-muscle').value;
+            const type = EXERCISE_IMAGE_MAP[name]?.type || document.getElementById('new-ex-type').value;
+            if (!name) { alert('種目を選択してください'); return; }
+
+            const sched = getScheduleForDate(selectedDate);
+            if (sched.badge === '休養日') { sched.badge = '筋トレ'; sched.title = 'カスタムトレーニング'; }
+
+            if (name === 'ランニング' || name === '傾斜ウォーキング') {
+                const mins = parseInt(document.getElementById('new-ex-minutes')?.value, 10) || 20;
+                sched.exercises.push({
+                    id: 'ex-' + Date.now(),
+                    name: name,
+                    muscle: muscle,
+                    type: 'cardio',
+                    minutes: mins,
+                    duration: mins + '分',
+                    actualSeconds: mins * 60,
+                    restSeconds: 60,
+                    note: '',
+                    done: false
+                });
+            } else {
+                const setCount = parseInt(document.getElementById('new-ex-sets')?.value, 10) || 3;
+                const paramVal = parseFloat(document.getElementById('new-ex-weight')?.value) || 0;
+                const repsVal = parseInt(document.getElementById('new-ex-reps')?.value, 10) || 10;
+
+                const sets = Array.from({ length: setCount }, () => {
+                    if (muscle === '体幹') {
+                        return { weight: 0, reps: paramVal, done: false };
+                    } else {
+                        return { weight: paramVal, reps: repsVal, done: false };
+                    }
+                });
+
+                sched.exercises.push({
+                    id: 'ex-' + Date.now(),
+                    name: name,
+                    muscle: muscle,
+                    type: type,
+                    targetReps: muscle === '体幹' ? (paramVal + '秒') : String(repsVal),
+                    restSeconds: 90,
+                    note: '',
+                    sets: sets
+                });
+            }
+
+            const backToPreview = isAddingFromWorkoutPreview;
+            saveAppData();
+            closeAddExerciseModal();
+            renderAll();
+            if (backToPreview) {
+                renderPreWorkoutList();
+            }
+        }
+
+        function openManualInputModal() {
+            const sched = getScheduleForDate(selectedDate);
+            const existingHist = appData.workoutHistory.find(h => h.date === formatDateKey(selectedDate));
+            document.getElementById('manual-duration-input').value = existingHist ? Math.max(1, Math.round(existingHist.durationSec / 60)) : '45';
+            document.getElementById('manual-memo-input').value = sched.memo || '';
+            renderManualEditorList();
+            document.getElementById('manual-input-modal').classList.remove('modal-hidden');
+        }
+
+        function renderManualEditorList() {
+            const sched = getScheduleForDate(selectedDate);
+            const listEl = document.getElementById('manual-exercises-editor-list');
+            if (!sched.exercises || sched.exercises.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-[#8E8E93] py-2">種目がありません。「＋種目を追加」してください。</p>';
+                return;
+            }
+
+            listEl.innerHTML = sched.exercises.map((ex, exIdx) => {
+                const thumb = getExerciseThumbnailHtml(ex.name, "w-8 h-8");
+                const boundCat = getBoundMuscleForExercise(ex);
+                ex.muscle = boundCat;
+
+                let detailInputsHtml = '';
+                if (isMinutesOnlyExercise(ex)) {
+                    detailInputsHtml = '<div class="flex items-center gap-2 text-xs">' +
+                        '<span class="text-gray-500">時間(分):</span>' +
+                        '<input type="number" min="1" value="' + (ex.minutes || 20) + '" onchange="updateManualMinutesOnly(' + exIdx + ', this.value)" class="w-16 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">分</span>' +
+                        '</div>';
+                } else if (ex.type === 'cardio' || boundCat === '有酸素' || boundCat === '体幹') {
+                    detailInputsHtml = '<div class="flex items-center gap-2 text-xs">' +
+                        '<span class="text-gray-500">秒数:</span>' +
+                        '<input type="number" value="' + (ex.sets?.[0]?.reps || 30) + '" onchange="updateManualCardio(' + exIdx + ', this.value)" class="w-20 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">秒</span>' +
+                        '</div>';
+                } else {
+                    detailInputsHtml = '<div class="flex flex-wrap items-center gap-2 text-xs">' +
+                        '<span class="text-gray-500">セット:</span>' +
+                        '<input type="number" min="1" max="15" value="' + (ex.sets?.length || 3) + '" onchange="updateManualSetCount(' + exIdx + ', this.value)" class="w-12 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">重量:</span>' +
+                        '<input type="number" step="0.5" value="' + (ex.sets?.[0]?.weight || 20) + '" onchange="updateManualWeight(' + exIdx + ', this.value)" class="w-16 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">kg</span>' +
+                        '<span class="text-gray-500">回数:</span>' +
+                        '<input type="number" value="' + (ex.sets?.[0]?.reps || 10) + '" onchange="updateManualReps(' + exIdx + ', this.value)" class="w-14 px-2 py-1 rounded bg-white font-bold tabular-nums" />' +
+                        '<span class="text-gray-500">回</span>' +
+                        '</div>';
+                }
+
+                return '<div class="swipe-row-wrapper">' +
+                    '<div class="swipe-delete-bg" onclick="deleteManualExercise(' + exIdx + ')">削除</div>' +
+                    '<div class="swipe-row-content p-2.5 rounded-xl text-xs space-y-2" ' +
+                    'ontouchstart="handleSwipeStart(event, this)" ontouchmove="handleSwipeMove(event, this)" ontouchend="handleSwipeEnd(event, this)">' +
+                    '<div class="flex items-center justify-between gap-2">' +
+                    '<div class="flex items-center gap-2 min-w-0">' + thumb + '<span class="font-bold text-[#111827] truncate">' + ex.name + '</span></div>' +
+                    '<span class="text-[11px] font-semibold text-[#6E6E73] shrink-0">' + boundCat + '</span>' +
+                    '</div>' +
+                    detailInputsHtml +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function handleSwipeStart(e, el) {
+            swipeState.startX = e.touches[0].clientX;
+            swipeState.currentEl = el;
+        }
+
+        function handleSwipeMove(e, el) {
+            if (!swipeState.currentEl) return;
+            const diffX = e.touches[0].clientX - swipeState.startX;
+            if (diffX < 0) {
+                const clamped = Math.max(diffX, -76);
+                el.style.transform = 'translateX(' + clamped + 'px)';
+            }
+        }
+
+        function handleSwipeEnd(e, el) {
+            if (!swipeState.currentEl) return;
+            const diffX = e.changedTouches[0].clientX - swipeState.startX;
+            if (diffX < -45) {
+                el.style.transform = 'translateX(-76px)';
+            } else {
+                el.style.transform = 'translateX(0px)';
+            }
+            swipeState.currentEl = null;
+        }
+
+        function updateManualMinutesOnly(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const mins = Math.max(1, parseInt(val, 10) || 1);
+            sched.exercises[exIdx].minutes = mins;
+            sched.exercises[exIdx].duration = mins + '分';
+            sched.exercises[exIdx].actualSeconds = mins * 60;
+            saveAppData();
+        }
+
+        function updateManualCardio(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            if (sched.exercises[exIdx].sets && sched.exercises[exIdx].sets[0]) {
+                sched.exercises[exIdx].sets[0].reps = parseFloat(val) || 0;
+            } else {
+                sched.exercises[exIdx].sets = [{ weight: 0, reps: parseFloat(val) || 0, done: false }];
+            }
+            saveAppData();
+        }
+
+        function updateManualSetCount(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const count = Math.max(1, Math.min(15, parseInt(val, 10) || 1));
+            const ex = sched.exercises[exIdx];
+            const currentSets = ex.sets || [{ weight: 20, reps: 10, done: false }];
+            const templateSet = currentSets[currentSets.length - 1] || { weight: 20, reps: 10, done: false };
+            if (count > currentSets.length) {
+                while (currentSets.length < count) {
+                    currentSets.push({ weight: templateSet.weight, reps: templateSet.reps, done: false });
+                }
+            } else if (count < currentSets.length) {
+                currentSets.length = count;
+            }
+            ex.sets = currentSets;
+            saveAppData();
+            renderManualEditorList();
+        }
+
+        function updateManualWeight(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const w = parseFloat(val) || 0;
+            if (sched.exercises[exIdx].sets) {
+                sched.exercises[exIdx].sets.forEach(s => s.weight = w);
+            }
+            saveAppData();
+        }
+
+        function updateManualReps(exIdx, val) {
+            const sched = getScheduleForDate(selectedDate);
+            const r = parseFloat(val) || 0;
+            if (sched.exercises[exIdx].sets) {
+                sched.exercises[exIdx].sets.forEach(s => s.reps = r);
+            }
+            saveAppData();
+        }
+
+        function deleteManualExercise(exIdx) {
+            const sched = getScheduleForDate(selectedDate);
+            sched.exercises.splice(exIdx, 1);
+            saveAppData();
+            renderManualEditorList();
+            renderWorkoutSection();
+        }
+
+        function closeManualInputModal() {
+            document.getElementById('manual-input-modal').classList.add('modal-hidden');
+        }
+
+        function handleSaveManualInput(e) {
+            e.preventDefault();
+            const sched = getScheduleForDate(selectedDate);
+            const durationMins = parseInt(document.getElementById('manual-duration-input').value, 10) || 45;
+            const memoText = document.getElementById('manual-memo-input').value.trim();
+
+            sched.memo = memoText;
+
+            let totalVol = 0;
+            const exCount = (sched.exercises || []).length || 1;
+            const perExSec = Math.round((durationMins * 60) / exCount);
+
+            (sched.exercises || []).forEach(ex => {
+                ex.muscle = getBoundMuscleForExercise(ex);
+                if (isMinutesOnlyExercise(ex)) {
+                    ex.actualSeconds = (ex.minutes || durationMins) * 60;
+                    ex.done = true;
+                } else {
+                    if (ex.sets && ex.sets.length > 0) {
+                        ex.sets.forEach(s => {
+                            s.done = true;
+                            totalVol += (s.weight || 0) * (s.reps || 0);
+                        });
+                    }
+                    if (ex.type === 'cardio') ex.done = true;
+                    ex.actualSeconds = perExSec;
+                }
+            });
+
+            const dateStr = formatDateKey(selectedDate);
+            const existingHistIdx = appData.workoutHistory.findIndex(h => h.date === dateStr);
+            const histItem = {
+                date: dateStr,
+                totalVolume: totalVol,
+                durationSec: durationMins * 60,
+                exercises: JSON.parse(JSON.stringify(sched.exercises))
+            };
+
+            if (existingHistIdx >= 0) {
+                appData.workoutHistory[existingHistIdx] = histItem;
+            } else {
+                appData.workoutHistory.push(histItem);
+            }
+
+            saveAppData();
+            closeManualInputModal();
+            renderAll();
+            alert('✓ 手動トレーニングデータを記録しました！');
+        }
+
+        function setHomeChartType(type) {
+            homeChartType = type;
+            document.getElementById('home-chart-tab-duration').className = type === 'duration' ? 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            document.getElementById('home-chart-tab-weight').className = type === 'weight' ? 'px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            renderHomeGrowthChart();
+        }
+
+        function setHomeChartRange(range) {
+            homeChartRange = range;
+            renderHomeGrowthChart();
+        }
+
+        function getHomeRangeDateKeys() {
+            const keys = [];
+            const days = homeChartRange === 'month' ? 30 : 7;
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(selectedDate);
+                d.setDate(selectedDate.getDate() - i);
+                keys.push(formatDateKey(d));
+            }
+            return keys;
+        }
+
+        function renderHomeGrowthChart() {
+            const ctx = document.getElementById('homeGrowthChart');
+            const unitHeader = document.getElementById('home-chart-unit-header');
+            if (!ctx) return;
+            if (homeChartInstance) homeChartInstance.destroy();
+
+            const dateKeys = getHomeRangeDateKeys();
+            const labels = dateKeys.map(k => k.slice(5));
+
+            if (homeChartType === 'weight') {
+                if (unitHeader) unitHeader.textContent = '単位: kg';
+                const dataPoints = dateKeys.map(k => appData.weightLogs[k] !== undefined ? Number(appData.weightLogs[k]) : null);
+                const numericVals = dataPoints.filter(v => v !== null && !isNaN(v));
+                const minVal = numericVals.length ? Math.floor((Math.min(...numericVals) - 0.5) * 10) / 10 : 50;
+                const maxVal = numericVals.length ? Math.ceil((Math.max(...numericVals) + 0.5) * 10) / 10 : 70;
+
+                homeChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '体重 (kg)',
+                            data: dataPoints,
+                            borderColor: '#111827',
+                            backgroundColor: 'rgba(17, 24, 39, 0.08)',
+                            pointBackgroundColor: '#007AFF',
+                            pointRadius: 4,
+                            spanGaps: true,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
+                        plugins: {
+                            legend: { display: false },
+                            showWeightLabels: true
+                        },
+                        scales: {
+                            y: {
+                                suggestedMin: minVal,
+                                suggestedMax: maxVal,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value + ' kg';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            if (unitHeader) unitHeader.textContent = '単位: 分';
+            const durationPoints = dateKeys.map(k => {
+                const log = appData.workoutHistory.find(h => h.date === k);
+                if (log) return Math.max(1, Math.round((log.durationSec || 0) / 60));
+                return 0;
+            });
+
+            homeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '運動時間 (分)',
+                        data: durationPoints,
+                        backgroundColor: '#007AFF',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, showWeightLabels: false },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value + ' 分';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setDataPeriod(period) {
+            dataPeriod = period;
+            ['all', 'month', 'week'].forEach(p => {
+                const btn = document.getElementById('btn-period-' + p);
+                if (btn) {
+                    btn.className = p === period
+                        ? 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer'
+                        : 'px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+                }
+            });
+            populatePeriodNavigator();
+            renderDataTab();
+        }
+
+        function getAvailableMonthKeys() {
+            const set = new Set();
+            const curMonth = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0');
+            set.add(curMonth);
+            appData.workoutHistory.forEach(h => { if (h.date && h.date.length >= 7) set.add(h.date.slice(0, 7)); });
+            Object.keys(appData.weightLogs).forEach(d => { if (d && d.length >= 7) set.add(d.slice(0, 7)); });
+            return Array.from(set).sort((a, b) => b.localeCompare(a));
+        }
+
+        function getWeekStartDate(d) {
+            const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            copy.setDate(copy.getDate() - copy.getDay());
+            return copy;
+        }
+
+        function getAvailableWeekKeys() {
+            const map = new Map();
+            const addDateToWeeks = (dateStr) => {
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return;
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const ws = getWeekStartDate(d);
+                const key = formatDateKey(ws);
+                if (!map.has(key)) {
+                    const label = ws.getFullYear() + '年 ' + (ws.getMonth() + 1) + '月 (' + (ws.getMonth() + 1) + '/' + ws.getDate() + '週)';
+                    map.set(key, label);
+                }
+            };
+
+            addDateToWeeks(formatDateKey(selectedDate));
+            appData.workoutHistory.forEach(h => { if (h.date) addDateToWeeks(h.date); });
+            Object.keys(appData.weightLogs).forEach(d => addDateToWeeks(d));
+
+            return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+        }
+
+        function populatePeriodNavigator() {
+            const monthNav = document.getElementById('data-month-nav');
+            const weekNav = document.getElementById('data-week-nav');
+            const monthSelect = document.getElementById('data-month-select');
+            const weekSelect = document.getElementById('data-week-select');
+
+            if (monthNav) monthNav.classList.add('hidden');
+            if (weekNav) weekNav.classList.add('hidden');
+
+            if (dataPeriod === 'month') {
+                const months = getAvailableMonthKeys();
+                if (!selectedDataMonthKey || !months.includes(selectedDataMonthKey)) {
+                    selectedDataMonthKey = months[0];
+                }
+                monthSelect.innerHTML = months.map(ym => {
+                    const [yr, mo] = ym.split('-');
+                    return '<option value="' + ym + '"' + (ym === selectedDataMonthKey ? ' selected' : '') + '>' + yr + '年 ' + Number(mo) + '月</option>';
+                }).join('');
+                monthNav.classList.remove('hidden');
+            } else if (dataPeriod === 'week') {
+                const weeks = getAvailableWeekKeys();
+                if (!selectedDataWeekKey || !weeks.some(w => w[0] === selectedDataWeekKey)) {
+                    selectedDataWeekKey = weeks[0]?.[0] || formatDateKey(getWeekStartDate(selectedDate));
+                }
+                weekSelect.innerHTML = weeks.map(([wkKey, label]) =>
+                    '<option value="' + wkKey + '"' + (wkKey === selectedDataWeekKey ? ' selected' : '') + '>' + label + '</option>'
+                ).join('');
+                weekNav.classList.remove('hidden');
+            }
+        }
+
+        function onDataMonthSelect(ym) {
+            selectedDataMonthKey = ym;
+            renderDataTab();
+        }
+
+        function onDataWeekSelect(wkKey) {
+            selectedDataWeekKey = wkKey;
+            renderDataTab();
+        }
+
+        function isDateWithinPeriod(dateStr) {
+            if (dataPeriod === 'all') return true;
+            if (dataPeriod === 'month') {
+                return dateStr.startsWith(selectedDataMonthKey || '');
+            }
+            if (dataPeriod === 'week') {
+                const parts = (selectedDataWeekKey || '').split('-');
+                if (parts.length !== 3) return true;
+                const startD = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const endD = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate() + 6);
+                const tParts = dateStr.split('-');
+                if (tParts.length !== 3) return false;
+                const targetD = new Date(Number(tParts[0]), Number(tParts[1]) - 1, Number(tParts[2]));
+                return targetD >= startD && targetD <= endD;
+            }
+            return true;
+        }
+
+        function getFilteredWorkoutHistory() {
+            return appData.workoutHistory.filter(h => isDateWithinPeriod(h.date));
+        }
+
+        function setAnalyticsMode(mode) {
+            analyticsMode = mode;
+            ['exercise', 'muscle', 'bodyweight'].forEach(m => {
+                document.getElementById('tab-ana-' + m).className = m === mode ? 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-3 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            });
+            const targetSelect = document.getElementById('analytics-target-select');
+            const metricToggle = document.getElementById('analytics-metric-toggle');
+            targetSelect.classList.toggle('hidden', mode === 'bodyweight');
+            if (metricToggle) metricToggle.classList.toggle('hidden', mode === 'bodyweight');
+            populateAnalyticsSelector();
+            renderAnalyticsChart();
+        }
+
+        function setAnalyticsMetric(metric) {
+            analyticsMetric = metric;
+            const wBtn = document.getElementById('btn-metric-weight');
+            const dBtn = document.getElementById('btn-metric-duration');
+            if (wBtn) wBtn.className = metric === 'weight' ? 'px-2.5 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            if (dBtn) dBtn.className = metric === 'duration' ? 'px-2.5 py-1.5 rounded-md text-xs font-semibold bg-white text-[#111827] shadow-2xs cursor-pointer' : 'px-2.5 py-1.5 rounded-md text-xs font-medium text-[#6E6E73] cursor-pointer';
+            renderAnalyticsChart();
+        }
+
+        function populateAnalyticsSelector() {
+            const select = document.getElementById('analytics-target-select');
+            const items = new Set();
+            if (analyticsMode === 'exercise') {
+                Object.keys(EXERCISE_IMAGE_MAP).forEach(k => items.add(k));
+                appData.workoutHistory.forEach(h => h.exercises?.forEach(e => items.add(e.name)));
+            } else if (analyticsMode === 'muscle') {
+                MUSCLE_CATEGORIES.forEach(m => items.add(m));
+            }
+            select.innerHTML = Array.from(items).map(n => '<option value="' + n + '">' + n + '</option>').join('');
+        }
+
+        function renderDataTab() {
+            populatePeriodNavigator();
+            const filteredLogs = getFilteredWorkoutHistory();
+            let sumVol = 0, sumSec = 0;
+            filteredLogs.forEach(h => {
+                sumVol += h.totalVolume || 0;
+                sumSec += h.durationSec || 0;
+            });
+
+            const weightEntries = Object.entries(appData.weightLogs)
+                .filter(([d]) => isDateWithinPeriod(d))
+                .sort((a, b) => a[0].localeCompare(b[0]));
+
+            document.getElementById('stat-total-vol').textContent = sumVol.toLocaleString() + 'kg';
+            document.getElementById('stat-total-time').textContent = Math.round(sumSec / 60) + '分';
+            document.getElementById('stat-workout-days').textContent = filteredLogs.length + '回';
+            document.getElementById('stat-latest-weight').textContent = weightEntries.length ? (Number(weightEntries[weightEntries.length - 1][1]).toFixed(1) + 'kg') : '-- kg';
+
+            renderMuscleBreakdown(filteredLogs);
+            populateAnalyticsSelector();
+            renderAnalyticsChart();
+        }
+
+        function renderMuscleBreakdown(filteredLogs) {
+            const listEl = document.getElementById('muscle-breakdown-list');
+            if (!listEl) return;
+
+            const stats = {};
+            MUSCLE_CATEGORIES.forEach(cat => {
+                stats[cat] = { volume: 0, seconds: 0 };
+            });
+
+            filteredLogs.forEach(h => {
+                const exList = h.exercises || [];
+                const totalExCount = exList.length || 1;
+                exList.forEach(ex => {
+                    const cat = getBoundMuscleForExercise(ex);
+                    if (!stats[cat]) stats[cat] = { volume: 0, seconds: 0 };
+                    let exVol = 0;
+                    if (ex.sets) {
+                        ex.sets.forEach(s => {
+                            exVol += (s.weight || 0) * (s.reps || 0);
+                        });
+                    }
+                    stats[cat].volume += exVol;
+                    const sec = ex.actualSeconds || (isMinutesOnlyExercise(ex) && ex.minutes ? ex.minutes * 60 : Math.round((h.durationSec || 0) / totalExCount));
+                    stats[cat].seconds += sec;
+                });
+            });
+
+            listEl.innerHTML = Object.entries(stats).map(([cat, st]) => {
+                const mins = Math.round(st.seconds / 60);
+                return '<div class="p-3 rounded-xl bg-[#F2F2F7] flex items-center justify-between">' +
+                    '<span class="text-xs font-bold text-[#111827]">' + cat + '</span>' +
+                    '<div class="text-right text-xs tabular-nums">' +
+                    '<span class="font-bold text-[#111827] block">' + st.volume.toLocaleString() + ' kg</span>' +
+                    '<span class="text-[11px] text-[#007AFF] font-semibold">' + mins + ' 分</span>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function renderAnalyticsChart() {
+            const ctx = document.getElementById('detailAnalyticsChart');
+            if (!ctx) return;
+            if (detailChartInstance) detailChartInstance.destroy();
+
+            const target = document.getElementById('analytics-target-select').value;
+            const filteredLogs = getFilteredWorkoutHistory().slice().sort((a, b) => a.date.localeCompare(b.date));
+
+            if (analyticsMode === 'bodyweight') {
+                const wEntries = Object.entries(appData.weightLogs)
+                    .filter(([d]) => isDateWithinPeriod(d))
+                    .sort((a, b) => a[0].localeCompare(b[0]));
+
+                detailChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: wEntries.length ? wEntries.map(e => e[0].slice(5)) : ['データなし'],
+                        datasets: [{
+                            label: '体重 (kg)',
+                            data: wEntries.length ? wEntries.map(e => Number(e[1])) : [0],
+                            borderColor: '#007AFF',
+                            backgroundColor: 'rgba(0, 122, 255, 0.08)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
+                        plugins: { showWeightLabels: true }
+                    }
+                });
+                return;
+            }
+
+            if (!filteredLogs.length) {
+                detailChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: ['データなし'], datasets: [{ label: analyticsMetric === 'duration' ? '運動時間 (分)' : '重量 (kg)', data: [0], borderColor: '#007AFF' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { showWeightLabels: false } }
+                });
+                return;
+            }
+
+            const labels = filteredLogs.map(h => h.date.slice(5));
+            const values = filteredLogs.map(h => {
+                const exList = h.exercises || [];
+                const matched = exList.filter(e => {
+                    if (analyticsMode === 'exercise') return e.name === target;
+                    const cat = getBoundMuscleForExercise(e);
+                    return cat === target;
+                });
+
+                if (analyticsMetric === 'duration') {
+                    if (!matched.length) return 0;
+                    let sec = 0;
+                    matched.forEach(m => {
+                        sec += m.actualSeconds || (isMinutesOnlyExercise(m) && m.minutes ? m.minutes * 60 : Math.round((h.durationSec || 0) / (exList.length || 1)));
+                    });
+                    return Math.round(sec / 60);
+                } else {
+                    if (!matched.length) return 0;
+                    let vol = 0;
+                    matched.forEach(m => {
+                        if (m.sets) m.sets.forEach(s => { vol += (s.weight || 0) * (s.reps || 0); });
+                    });
+                    return vol;
+                }
+            });
+
+            detailChartInstance = new Chart(ctx, {
+                type: analyticsMetric === 'duration' ? 'bar' : 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: analyticsMetric === 'duration' ? (target + ' 運動時間(分)') : (target + ' 重量(kg)'),
+                        data: values,
+                        borderColor: '#007AFF',
+                        backgroundColor: analyticsMetric === 'duration' ? '#007AFF' : 'rgba(0, 122, 255, 0.1)',
+                        borderRadius: 6,
+                        fill: analyticsMetric !== 'duration'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { showWeightLabels: false },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (v) {
+                                    return v + (analyticsMetric === 'duration' ? ' 分' : ' kg');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function openScheduleModal() {
+            const sched = getScheduleForDate(selectedDate);
+            document.getElementById('schedule-modal-title').textContent = (selectedDate.getMonth() + 1) + '月' + selectedDate.getDate() + '日のメニュー編集';
+            document.getElementById('sched-title-input').value = sched.title;
+            document.getElementById('sched-badge-input').value = sched.badge;
+            document.getElementById('sched-sub-input').value = sched.subtitle || '';
+            document.getElementById('sched-memo-input').value = sched.memo || '';
+            renderModalQuickExerciseList();
+            document.getElementById('schedule-modal').classList.remove('modal-hidden');
+        }
+
+        function renderModalQuickExerciseList() {
+            const sched = getScheduleForDate(selectedDate);
+            const list = document.getElementById('modal-exercise-quick-list');
+            if (!sched.exercises || sched.exercises.length === 0) { list.innerHTML = '<p class="text-xs text-[#8E8E93] py-2">種目なし</p>'; return; }
+            list.innerHTML = sched.exercises.map((ex, idx) => '<div class="flex items-center justify-between px-3 py-2 rounded-xl bg-[#F2F2F7] text-xs">' +
+                '<div class="flex items-center gap-2">' +
+                getExerciseThumbnailHtml(ex.name, "w-7 h-7") +
+                '<span class="font-semibold text-[#111827]">' + ex.name + '</span>' +
+                '</div>' +
+                '<button type="button" onclick="deleteExercise(' + idx + '); renderModalQuickExerciseList();" class="text-rose-600 font-semibold cursor-pointer">削除</button>' +
+                '</div>').join('');
+        }
+
+        function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('modal-hidden'); }
+
+        function handleSaveSchedule(e) {
+            e.preventDefault();
+            const sched = getScheduleForDate(selectedDate);
+            sched.title = document.getElementById('sched-title-input').value.trim();
+            sched.badge = document.getElementById('sched-badge-input').value;
+            sched.subtitle = document.getElementById('sched-sub-input').value.trim();
+            sched.memo = document.getElementById('sched-memo-input').value.trim();
+            if (sched.badge === '休養日') sched.exercises = [];
+            if (document.getElementById('sched-apply-weekly')?.checked) {
+                appData.weeklyTemplates[selectedDate.getDay()] = JSON.parse(JSON.stringify(sched));
+            }
             saveAppData();
             closeScheduleModal();
             renderAll();
