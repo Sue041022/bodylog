@@ -928,7 +928,7 @@
         const CURRENT_SCHEMA_VERSION = 22;
         const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
         const MUSCLE_CATEGORIES = ['胸', '背中', '肩', '腕', '脚', 'お尻', '体幹', '有酸素'];
-        const IMAGE_FOLDER_PREFIX = '筋トレ_イメージ画像/';
+        const IMAGE_FOLDER_PREFIX = '';
 
         const weightPointLabelPlugin = {
             id: 'weightPointLabelPlugin',
@@ -1063,7 +1063,7 @@
         function getExerciseThumbnailHtml(exName, extraClass = "w-12 h-12") {
             const info = EXERCISE_IMAGE_MAP[exName];
             const rawPath = info ? (IMAGE_FOLDER_PREFIX + info.file) : null;
-            const filePath = rawPath ? rawPath.normalize('NFD') : null;
+            const filePath = rawPath || null;
             if (filePath) {
                 return '<img src="' + filePath + '" alt="' + exName + '" loading="lazy" decoding="async" class="' + extraClass + ' rounded-xl object-cover border border-[#E5E5EA] bg-white shrink-0" onerror="this.replaceWith(createFallbackElement(\'' + exName + '\', \'' + extraClass + '\'));">';
             }
