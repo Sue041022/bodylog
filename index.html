@@ -924,11 +924,10 @@
        JavaScript
   =========================================== -->
     <script>
-        const STORAGE_KEY = 'bodylog_custom_v18';
-        const CURRENT_SCHEMA_VERSION = 23;
+        const STORAGE_KEY = 'bodylog_custom_v19';
+        const CURRENT_SCHEMA_VERSION = 24;
         const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
         const MUSCLE_CATEGORIES = ['胸', '背中', '肩', '腕', '脚', 'お尻', '体幹', '有酸素'];
-        const IMAGE_FOLDER_PREFIX = '筋トレ_イメージ画像/';
 
         const weightPointLabelPlugin = {
             id: 'weightPointLabelPlugin',
@@ -1058,10 +1057,10 @@
             return ex.name === 'ランニング' || ex.name === '傾斜ウォーキング';
         }
 
+        // index.html と同じ階層の平置き参照（NFD正規化対応）
         function getExerciseThumbnailHtml(exName, extraClass = "w-12 h-12") {
             const info = EXERCISE_IMAGE_MAP[exName];
-            const fileName = info ? info.file.normalize('NFD') : null;
-            const srcPath = fileName ? (IMAGE_FOLDER_PREFIX + fileName).normalize('NFD') : null;
+            const srcPath = info ? info.file.normalize('NFD') : null;
             if (srcPath) {
                 const safeName = String(exName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const safeClass = String(extraClass || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
